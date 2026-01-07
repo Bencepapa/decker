@@ -970,6 +970,7 @@ var Config = {};
         addConfigInt( "difficulty", "Diff", [0,1],    0);
         addConfigBool("viewice",    "VIce",          true); // show popup when analyzing an ICE
         addConfigBool("warnclose",  "WCl",           true); // show warning when closing the game
+        addConfigBool("m_bModernUI", "ModernUI",     false);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1202,7 +1203,7 @@ let tooltip = (function(){
 
         function show(txt) {
                 last = txt;
-                if (!g_pChar.m_bTooltips) return hide();
+                if (!Config.m_bTooltips) return hide();
                 if (typeof txt === "function")
                         txt = txt();
                 if (!txt) {
