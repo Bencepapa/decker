@@ -87,6 +87,7 @@ button:hover:not(:disabled) {
         min-height: 100%;
         display: flex;
         flex-direction: column;
+        flex: 1;
 }
 
 .popupWrapper > * > * {
@@ -103,24 +104,26 @@ button:hover:not(:disabled) {
         text-align: center;
         color: white;
         text-shadow: 0 0 1px black, 0 0 1px black, 0 0 1px black, 0 0 1px black;
-        padding: 0.5em;
+        padding: 0.8em;
         margin: 0;
         position: sticky;
         top: 0;
         z-index: 10;
+        border-radius: 0 !important;
 }
 
-/* Maintain original style for simple alerts if they use a specific class or structure */
 .popupWrapper.alert {
         background: rgba(0,0,0,.4);
         justify-content: center;
         align-items: center;
+        padding: 20px;
 }
 
 .popupWrapper.alert > * {
         width: auto;
         min-height: auto;
         max-width: 90%;
+        flex: none;
 }
 
 .popupWrapper.alert > * > * {
@@ -132,15 +135,14 @@ button:hover:not(:disabled) {
 }
 
 .popupWrapper > * > :first-child {
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-        border-top-width: 5px;
+        border-radius: 0;
+        border-top-width: 0;
 }
 .popupWrapper > * > :last-child {
-        border-bottom-left-radius: 5px;
-        border-bottom-right-radius: 5px;
-        border-bottom-width: 5px;
+        border-radius: 0;
+        border-bottom-width: 0;
 }
+
 
 #popup_homeview button {
         width: 28px;
