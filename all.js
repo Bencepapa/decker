@@ -970,11 +970,6 @@ var Config = {};
         addConfigInt( "difficulty", "Diff", [0,1],    0);
         addConfigBool("viewice",    "VIce",          true); // show popup when analyzing an ICE
         addConfigBool("warnclose",  "WCl",           true); // show warning when closing the game
-        Config.onchange("m_bModernUI", function(val) {
-                if (val) document.body.classList.add("modern-ui");
-                else document.body.classList.remove("modern-ui");
-        });
-        if (Config.m_bModernUI) document.body.classList.add("modern-ui");
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1207,7 +1202,7 @@ let tooltip = (function(){
 
         function show(txt) {
                 last = txt;
-                if (!Config.m_bTooltips) return hide();
+                if (!g_pChar.m_bTooltips) return hide();
                 if (typeof txt === "function")
                         txt = txt();
                 if (!txt) {
@@ -15256,9 +15251,8 @@ var Anim = {};
                 options.forEach(([txt,func,enabled=true]) => {
                         if (!enabled) func = null;
                         let option = document.createElement("label");
-                        option.className = "node-action-option";
                         option.style.display = "block";
-                        option.innerHTML = "<input type='radio' name='usenode'><span>"+escapeHTML(txt)+"</span>";
+                        option.innerHTML = "<input type='radio' name='usenode'>"+escapeHTML(txt);
 
                         option.children[0].onchange = () => { action = func; };
                         if (!enabled) {
