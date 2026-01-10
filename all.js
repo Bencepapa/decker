@@ -12152,8 +12152,10 @@ var Anim = {};
         let [obj,buttons] = HTMLbuilder(
                 ["div", true, [
                         ["div", [
-                                ["div", true, {className:"flexV",style:{alignItems:"center",margin:".5em 0"}}, [
+                                ["div", {className:"flexV",style:{alignItems:"center",margin:".5em 0"}}, [
                                         ["div", {style:{width:"157px",height:"74px",background:"url(img/welcome.png)"}}],
+                                ]],
+                                ["div", true, {className:"flexV",style:{alignItems:"center",margin:".5em 0"}}, [
                                         ["button", {style:{margin:".5em 0"},textContent:"New Game"}],
                                         ["button", {style:{margin:".5em 0"},textContent:"Load Game"}],
                                         ["button", {style:{margin:".5em 0"},textContent:"Import Game"}],
