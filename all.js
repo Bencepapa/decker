@@ -971,7 +971,7 @@ var Config = {};
         addConfigBool("viewice",    "VIce",          true); // show popup when analyzing an ICE
         addConfigBool("warnclose",  "WCl",           true); // show warning when closing the game
         addConfigBool("m_bModernUI", "ModernUI",     false);
-        addConfigBool("m_bTooltips", "Tooltips",     true);
+        addConfigBool("m_bModernMatrix", "ModernMatrix", false);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14634,6 +14634,18 @@ var Anim = {};
                                                         ["span", {textContent:"Warning when closing game"}],
                                                 ]],
                                         ]],
+                                        ["div", [
+                                                ["label", [
+                                                        ["input", {type:"checkbox"}],
+                                                        ["span", {textContent:"Modern UI"}],
+                                                ]],
+                                        ]],
+                                        ["div", [
+                                                ["label", [
+                                                        ["input", {type:"checkbox"}],
+                                                        ["span", {textContent:"Modern Matrix"}],
+                                                ]],
+                                        ]],
                                         ["div", {className:"flexH",style:{marginTop:".5em"}}, [
                                                 ["span", {textContent:"Sound Volume:"}],
                                                 ["input", true, {type:"range",tabindex:"-1",min:0,max:100,step:1}],
@@ -14657,6 +14669,8 @@ var Anim = {};
         inputs[2].onchange = () => { Config.mute = !inputs[2].checked; };
         inputs[3].onchange = () => { Config.viewice = inputs[3].checked; };
         inputs[4].onchange = () => { Config.warnclose = inputs[4].checked; };
+        inputs[5].onchange = () => { Config.m_bModernUI = inputs[5].checked; };
+        inputs[6].onchange = () => { Config.m_bModernMatrix = inputs[6].checked; };
         inpVol.oninput = () => {
                 Config.volume = +inpVol.value;
                 txtVol.textContent = Config.volume + "%";
@@ -14688,6 +14702,8 @@ var Anim = {};
                 inputs[2].checked = !Config.mute;
                 inputs[3].checked = Config.viewice;
                 inputs[4].checked = Config.warnclose;
+                inputs[5].checked = Config.m_bModernUI;
+                inputs[6].checked = Config.m_bModernMatrix;
                 inpVol.value = Config.volume;
 
                 // don't allow difficulty change while in the matrix
@@ -15682,7 +15698,7 @@ var Anim = {};
         Popup.create("matrix", obj).onInit(Initialize).onKey({null:OnKeyPress});
 
         function Initialize(pEntryNode) {
-                if (Config.m_bModernUI) {
+                if (Config.m_bModernMatrix) {
                         Popup.closeAll();
                         Popup.modern_matrix(pEntryNode);
                         return;
