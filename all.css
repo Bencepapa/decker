@@ -205,15 +205,16 @@ button:hover:not(:disabled) {
         white-space: normal; /* fixes a Firefox bug */
 }
 .tableList thead {
+        position: sticky;
         top: 0;
-        position: absolute;
-        pointer-events: none;
+        z-index: 1;
+        background: #bbb;
 }
 .tableList thead tr:first-child {
         pointer-events: auto;
 }
-.tableList thead tr+tr, .tableList tbody tr:first-child {
-        visibility: hidden;
+.tableList tbody tr:first-child {
+        display: none;
 }
 .tableList th {
         background: #bbb;

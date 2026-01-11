@@ -868,6 +868,10 @@ tableList.prototype.redraw = function() {
         this.tHead.innerHTML = html;
         this.tBody.innerHTML = html;
 
+        // Ensure the table width is consistent
+        mainTable.style.width = "max-content";
+        mainTable.style.minWidth = "100%";
+
         this.markRow(this.selected, false);
 }
 
