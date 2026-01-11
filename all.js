@@ -15752,11 +15752,15 @@ var Anim = {};
 // popup_modern_matrix.js
 
 {
-        let [obj, btnJackOut] = HTMLbuilder(
+        let [obj, txtTitle, txtSteps, btnJackOut] = HTMLbuilder(
                 ["div", true, {id:"popup_modern_matrix"}, [
-                        ["h2", {textContent:"Modern Matrix"}],
-                        ["div", {style:{display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"400px", background:"#111"}}, [
-                                ["button", true, {textContent:"Jack Out", style:{width:"200px", height:"50px"}}],
+                        ["div", {className:"modern-titlebar", style:{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 10px", background:"#333", color:"#0f0", borderBottom:"1px solid #0f0"}}, [
+                                ["div", true, {style:{fontWeight:"bold"}}],
+                                ["div", true, {style:{fontSize:"0.9em"}}],
+                                ["button", true, {textContent:"Jack Out", style:{width:"auto", height:"auto", padding:"2px 8px", fontSize:"0.8em", margin:0}}],
+                        ]],
+                        ["div", {style:{display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"360px", background:"#111"}}, [
+                                ["div", {textContent:"MATRIX INTERFACE", style:{color:"#060", fontSize:"2em", letterSpacing:"5px"}}],
                         ]],
                 ]],
         );
@@ -15766,13 +15770,22 @@ var Anim = {};
         Popup.create("modern_matrix", obj).onInit(initFunc);
 
         function initFunc() {
-                // Just a placeholder for now
+                update();
+        }
+
+        function update() {
+                txtTitle.textContent = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                txtSteps.textContent = "Steps: " + (g_pChar.m_nRunTime || 0);
         }
 
         function jackOut() {
                 Popup.close();
                 OnDisconnect();
         }
+
+        // We need a way to update this periodically or when state changes
+        // For now, let's hook into the global animation loop if possible, 
+        // or just rely on re-init.
 }
 
 // main.js

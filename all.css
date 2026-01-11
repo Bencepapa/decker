@@ -425,20 +425,15 @@ button:hover:not(:disabled) {
         background: #111;
         color: #0f0;
         font-family: 'Courier New', Courier, monospace;
-}
-#popup_modern_matrix h2 {
-        background: #030;
-        color: #0f0;
-}
-#popup_modern_matrix button {
-        background: #020;
-        color: #0f0;
         border: 1px solid #0f0;
-        font-weight: bold;
-        transition: all 0.2s;
 }
-#popup_modern_matrix button:hover {
-        background: #0f0;
-        color: #000;
+#popup_modern_matrix .modern-titlebar button {
+        background: #900;
+        color: white;
+        border: 1px solid #f00;
+}
+#popup_modern_matrix .modern-titlebar button:hover {
+        background: #f00;
+        color: white;
 }
 
