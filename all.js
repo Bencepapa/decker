@@ -970,6 +970,8 @@ var Config = {};
         addConfigInt( "difficulty", "Diff", [0,1],    0);
         addConfigBool("viewice",    "VIce",          true); // show popup when analyzing an ICE
         addConfigBool("warnclose",  "WCl",           true); // show warning when closing the game
+        addConfigBool("m_bModernUI", "ModernUI",     false);
+        addConfigBool("m_bTooltips", "Tooltips",     true);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15680,6 +15682,11 @@ var Anim = {};
         Popup.create("matrix", obj).onInit(Initialize).onKey({null:OnKeyPress});
 
         function Initialize(pEntryNode) {
+                if (Config.m_bModernUI) {
+                        Popup.closeAll();
+                        Popup.modern_matrix(pEntryNode);
+                        return;
+                }
                 // Clean stuff
                 Anim.clear();
                 MV.l_tProgramList.clear();
@@ -15722,6 +15729,34 @@ var Anim = {};
                 Anim.run();
         }
 
+}
+
+// main.js
+
+// popup_modern_matrix.js
+
+{
+        let [obj, btnJackOut] = HTMLbuilder(
+                ["div", true, {id:"popup_modern_matrix"}, [
+                        ["h2", {textContent:"Modern Matrix"}],
+                        ["div", {style:{display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"400px", background:"#111"}}, [
+                                ["button", true, {textContent:"Jack Out", style:{width:"200px", height:"50px"}}],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnJackOut, jackOut);
+
+        Popup.create("modern_matrix", obj).onInit(initFunc);
+
+        function initFunc() {
+                // Just a placeholder for now
+        }
+
+        function jackOut() {
+                Popup.close();
+                OnDisconnect();
+        }
 }
 
 // main.js

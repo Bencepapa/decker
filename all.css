@@ -421,7 +421,24 @@ button:hover:not(:disabled) {
         margin-right: 0;
 }
 
-fieldset {
-        border: 2px groove #ddd;
+#popup_modern_matrix {
+        background: #111;
+        color: #0f0;
+        font-family: 'Courier New', Courier, monospace;
+}
+#popup_modern_matrix h2 {
+        background: #030;
+        color: #0f0;
+}
+#popup_modern_matrix button {
+        background: #020;
+        color: #0f0;
+        border: 1px solid #0f0;
+        font-weight: bold;
+        transition: all 0.2s;
+}
+#popup_modern_matrix button:hover {
+        background: #0f0;
+        color: #000;
 }
 
