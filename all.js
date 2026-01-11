@@ -13668,17 +13668,74 @@ var Anim = {};
 
         Popup.create("contracts", obj).onInit(initFunc).onKey({"Escape":close}).onKey(tList.keyBindings());
 
-        function onClick(p) {
-                btnView.disabled = (p===null);
-                btnAccept.disabled = (p===null);
-        }
         function initFunc() {
-                // set up the contract list
-                tList.clear();
-                tList.setContents(g_pChar.m_olContracts);
-                // disable View & Accept button
+                if (Config.m_bModernUI) {
+                        obj.classList.add("modern-ui");
+                        renderModernCards();
+                } else {
+                        obj.classList.remove("modern-ui");
+                        tList.clear();
+                        tList.setContents(g_pChar.m_olContracts);
+                }
                 btnView.disabled = true;
                 btnAccept.disabled = true;
+        }
+
+        function renderModernCards() {
+                let container = tList.tBody.parentNode.parentNode;
+                container.innerHTML = "";
+                container.style.display = "block";
+                container.style.overflowY = "auto";
+                container.style.padding = "10px";
+                container.style.background = "#111";
+
+                g_pChar.m_olContracts.forEach((contract) => {
+                        let card = document.createElement("div");
+                        card.className = "contract-card";
+                        
+                        let diffStr = (contract.m_nDifficulty * 5) + "%";
+
+                        card.innerHTML = `
+                                <div class="contract-card-header">
+                                        <div class="contract-card-type">${escapeHTML(contract.GetTypeText())}</div>
+                                        <div class="contract-card-pay">${contract.m_nPay}cr</div>
+                                </div>
+                                <div class="contract-card-body">
+                                        <div class="contract-card-info"><span>Target:</span> <span>${escapeHTML(contract.m_szSystemName)}</span></div>
+                                        <div class="contract-card-info"><span>Difficulty:</span> <span>${diffStr}</span></div>
+                                        <div class="contract-card-info"><span>Deadline:</span> <span>${contract.m_nDaysLeft} days</span></div>
+                                </div>
+                                <div class="contract-card-footer">
+                                        <button class="accept-btn">Accept</button>
+                                </div>
+                        `;
+
+                        card.onclick = (e) => {
+                                if (e.target.classList.contains("accept-btn")) {
+                                        acceptModern(contract);
+                                } else {
+                                        viewModern(contract);
+                                }
+                        };
+                        container.appendChild(card);
+                });
+        }
+
+        function acceptModern(contract) {
+                g_pChar.m_pCurrentContract = contract;
+                g_pChar.m_olContracts.remove(contract);
+                if (contract.m_nType === CONT_RUN_PROGRAM) {
+                        let nRating = Math.ceil((contract.m_nCorporation + 1) / 5);
+                        let pProgram = Program.create(PROGRAM_CLIENT, nRating);
+                        g_pChar.m_olSoftware.push(pProgram);
+                }
+                Popup.close();
+        }
+
+        function viewModern(contract) {
+                Popup.contract(contract).onYes(() => {
+                        acceptModern(contract);
+                });
         }
 
         function view() {
