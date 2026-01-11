@@ -869,6 +869,7 @@ tableList.prototype.redraw = function() {
         this.tBody.innerHTML = html;
 
         // Ensure the table width is consistent
+        let mainTable = document.createElement("table");
         mainTable.style.width = "max-content";
         mainTable.style.minWidth = "100%";
 
@@ -13670,6 +13671,10 @@ var Anim = {};
 
         Popup.create("contracts", obj).onInit(initFunc).onKey({"Escape":close}).onKey(tList.keyBindings());
 
+        function onClick(p) {
+                btnView.disabled = (p===null);
+                btnAccept.disabled = (p===null);
+        }
         function initFunc() {
                 if (Config.m_bModernUI) {
                         obj.classList.add("modern-ui");
@@ -13684,8 +13689,8 @@ var Anim = {};
         }
 
         function renderModernCards() {
-                let container = tList.tBody.parentNode.parentNode;
-                container.innerHTML = "";
+                let container = tList.tBody.parentNode.parentNode;  // this will fail if parentNode is deleted
+                container.innerHTML = "";       // this clearing everything? No good.
                 container.style.display = "block";
                 container.style.overflowY = "auto";
                 container.style.padding = "10px";
