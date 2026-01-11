@@ -868,6 +868,10 @@ tableList.prototype.redraw = function() {
         this.tHead.innerHTML = html;
         this.tBody.innerHTML = html;
 
+        // Ensure the table width is consistent
+        mainTable.style.width = "max-content";
+        mainTable.style.minWidth = "100%";
+
         this.markRow(this.selected, false);
 }
 
@@ -970,6 +974,8 @@ var Config = {};
         addConfigInt( "difficulty", "Diff", [0,1],    0);
         addConfigBool("viewice",    "VIce",          true); // show popup when analyzing an ICE
         addConfigBool("warnclose",  "WCl",           true); // show warning when closing the game
+        addConfigBool("m_bModernUI", "ModernUI",     false);
+        addConfigBool("m_bModernMatrix", "ModernMatrix", false);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -13664,17 +13670,74 @@ var Anim = {};
 
         Popup.create("contracts", obj).onInit(initFunc).onKey({"Escape":close}).onKey(tList.keyBindings());
 
-        function onClick(p) {
-                btnView.disabled = (p===null);
-                btnAccept.disabled = (p===null);
-        }
         function initFunc() {
-                // set up the contract list
-                tList.clear();
-                tList.setContents(g_pChar.m_olContracts);
-                // disable View & Accept button
+                if (Config.m_bModernUI) {
+                        obj.classList.add("modern-ui");
+                        renderModernCards();
+                } else {
+                        obj.classList.remove("modern-ui");
+                        tList.clear();
+                        tList.setContents(g_pChar.m_olContracts);
+                }
                 btnView.disabled = true;
                 btnAccept.disabled = true;
+        }
+
+        function renderModernCards() {
+                let container = tList.tBody.parentNode.parentNode;
+                container.innerHTML = "";
+                container.style.display = "block";
+                container.style.overflowY = "auto";
+                container.style.padding = "10px";
+                container.style.background = "#111";
+
+                g_pChar.m_olContracts.forEach((contract) => {
+                        let card = document.createElement("div");
+                        card.className = "contract-card";
+                        
+                        let diffStr = (contract.m_nDifficulty * 5) + "%";
+
+                        card.innerHTML = `
+                                <div class="contract-card-header">
+                                        <div class="contract-card-type">${escapeHTML(contract.GetTypeText())}</div>
+                                        <div class="contract-card-pay">${contract.m_nPay}cr</div>
+                                </div>
+                                <div class="contract-card-body">
+                                        <div class="contract-card-info"><span>Target:</span> <span>${escapeHTML(contract.m_szSystemName)}</span></div>
+                                        <div class="contract-card-info"><span>Difficulty:</span> <span>${diffStr}</span></div>
+                                        <div class="contract-card-info"><span>Deadline:</span> <span>${contract.m_nDaysLeft} days</span></div>
+                                </div>
+                                <div class="contract-card-footer">
+                                        <button class="accept-btn">Accept</button>
+                                </div>
+                        `;
+
+                        card.onclick = (e) => {
+                                if (e.target.classList.contains("accept-btn")) {
+                                        acceptModern(contract);
+                                } else {
+                                        viewModern(contract);
+                                }
+                        };
+                        container.appendChild(card);
+                });
+        }
+
+        function acceptModern(contract) {
+                g_pChar.m_pCurrentContract = contract;
+                g_pChar.m_olContracts.remove(contract);
+                if (contract.m_nType === CONT_RUN_PROGRAM) {
+                        let nRating = Math.ceil((contract.m_nCorporation + 1) / 5);
+                        let pProgram = Program.create(PROGRAM_CLIENT, nRating);
+                        g_pChar.m_olSoftware.push(pProgram);
+                }
+                Popup.close();
+        }
+
+        function viewModern(contract) {
+                Popup.contract(contract).onYes(() => {
+                        acceptModern(contract);
+                });
         }
 
         function view() {
@@ -14634,6 +14697,18 @@ var Anim = {};
                                                         ["span", {textContent:"Warning when closing game"}],
                                                 ]],
                                         ]],
+                                        ["div", [
+                                                ["label", [
+                                                        ["input", {type:"checkbox"}],
+                                                        ["span", {textContent:"Modern UI"}],
+                                                ]],
+                                        ]],
+                                        ["div", [
+                                                ["label", [
+                                                        ["input", {type:"checkbox"}],
+                                                        ["span", {textContent:"Modern Matrix"}],
+                                                ]],
+                                        ]],
                                         ["div", {className:"flexH",style:{marginTop:".5em"}}, [
                                                 ["span", {textContent:"Sound Volume:"}],
                                                 ["input", true, {type:"range",tabindex:"-1",min:0,max:100,step:1}],
@@ -14657,6 +14732,8 @@ var Anim = {};
         inputs[2].onchange = () => { Config.mute = !inputs[2].checked; };
         inputs[3].onchange = () => { Config.viewice = inputs[3].checked; };
         inputs[4].onchange = () => { Config.warnclose = inputs[4].checked; };
+        inputs[5].onchange = () => { Config.m_bModernUI = inputs[5].checked; };
+        inputs[6].onchange = () => { Config.m_bModernMatrix = inputs[6].checked; };
         inpVol.oninput = () => {
                 Config.volume = +inpVol.value;
                 txtVol.textContent = Config.volume + "%";
@@ -14688,6 +14765,8 @@ var Anim = {};
                 inputs[2].checked = !Config.mute;
                 inputs[3].checked = Config.viewice;
                 inputs[4].checked = Config.warnclose;
+                inputs[5].checked = Config.m_bModernUI;
+                inputs[6].checked = Config.m_bModernMatrix;
                 inpVol.value = Config.volume;
 
                 // don't allow difficulty change while in the matrix
@@ -15682,6 +15761,11 @@ var Anim = {};
         Popup.create("matrix", obj).onInit(Initialize).onKey({null:OnKeyPress});
 
         function Initialize(pEntryNode) {
+                if (Config.m_bModernMatrix) {
+                        Popup.closeAll();
+                        Popup.modern_matrix(pEntryNode);
+                        return;
+                }
                 // Clean stuff
                 Anim.clear();
                 MV.l_tProgramList.clear();
@@ -15724,6 +15808,47 @@ var Anim = {};
                 Anim.run();
         }
 
+}
+
+// main.js
+
+// popup_modern_matrix.js
+
+{
+        let [obj, txtTitle, txtSteps, btnJackOut] = HTMLbuilder(
+                ["div", true, {id:"popup_modern_matrix"}, [
+                        ["div", {className:"modern-titlebar", style:{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 10px", background:"#333", color:"#0f0", borderBottom:"1px solid #0f0"}}, [
+                                ["div", true, {style:{fontWeight:"bold"}}],
+                                ["div", true, {style:{fontSize:"0.9em"}}],
+                                ["button", true, {textContent:"Jack Out", style:{width:"auto", height:"auto", padding:"2px 8px", fontSize:"0.8em", margin:0}}],
+                        ]],
+                        ["div", {style:{display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"360px", background:"#111"}}, [
+                                ["div", {textContent:"MATRIX INTERFACE", style:{color:"#060", fontSize:"2em", letterSpacing:"5px"}}],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnJackOut, jackOut);
+
+        Popup.create("modern_matrix", obj).onInit(initFunc);
+
+        function initFunc() {
+                update();
+        }
+
+        function update() {
+                txtTitle.textContent = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                txtSteps.textContent = "Steps: " + (g_pChar.m_nRunTime || 0);
+        }
+
+        function jackOut() {
+                Popup.close();
+                OnDisconnect();
+        }
+
+        // We need a way to update this periodically or when state changes
+        // For now, let's hook into the global animation loop if possible, 
+        // or just rely on re-init.
 }
 
 // main.js
