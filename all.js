@@ -869,7 +869,7 @@ tableList.prototype.redraw = function() {
         this.tBody.innerHTML = html;
 
         // Ensure the table width is consistent
-        let mainTable = document.createElement("table");
+        let mainTable = this.tHead.parentNode;
         mainTable.style.width = "max-content";
         mainTable.style.minWidth = "100%";
 
@@ -12505,7 +12505,11 @@ var Anim = {};
                         Popup.contract();
                 } else {
                         // No contract selected
+                if (Config.m_bModernUI) {
+                        Popup.modern_contracts();
+                } else {
                         Popup.contracts();
+                }
                 }
         }
         function view_shop() {
@@ -13676,25 +13680,69 @@ var Anim = {};
                 btnAccept.disabled = (p===null);
         }
         function initFunc() {
-                if (Config.m_bModernUI) {
-                        obj.classList.add("modern-ui");
-                        renderModernCards();
-                } else {
-                        obj.classList.remove("modern-ui");
-                        tList.clear();
-                        tList.setContents(g_pChar.m_olContracts);
-                }
+                tList.clear();
+                tList.setContents(g_pChar.m_olContracts);
                 btnView.disabled = true;
                 btnAccept.disabled = true;
         }
 
+        function view() {
+                let theContract = tList.getSelected();
+                if (!theContract) return;
+
+                Popup.contract(theContract).onYes(() => {
+                        accept();
+                });
+        }
+
+        function accept() {
+                let theContract = tList.getSelected();
+                if (!theContract) return;
+
+                // User has accepted contract
+                g_pChar.m_pCurrentContract = theContract;
+                g_pChar.m_olContracts.remove(theContract); // remove contract from list
+
+                // If this is a Run Program contract, add the program to the user's deck
+                if (theContract.m_nType === CONT_RUN_PROGRAM) {
+                        // Add the program to run
+                        let nRating = Math.ceil( (theContract.m_nCorporation+1) / 5 );
+                        let pProgram = Program.create(PROGRAM_CLIENT, nRating);
+                        g_pChar.m_olSoftware.push(pProgram);
+                }
+
+                Popup.close();
+        }
+
+        function close() {
+                Popup.close();
+        }
+
+}
+
+// popup_modern_contracts.js
+
+{
+        let [obj, container, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", {textContent:"Available Contracts"}],
+                        ["div", true, {style:{display:"block", overflowY:"auto", padding:"10px", background:"#111", flex:1}}],
+                        ["div", {className:"btnGroup"}, [
+                                ["button", true, {textContent:"Close"}],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnClose, close);
+
+        Popup.create("modern_contracts", obj).onInit(initFunc).onKey({"Escape":close});
+
+        function initFunc() {
+                renderModernCards();
+        }
+
         function renderModernCards() {
-                let container = tList.tBody.parentNode.parentNode;  // this will fail if parentNode is deleted
-                container.innerHTML = "";       // this clearing everything? No good.
-                container.style.display = "block";
-                container.style.overflowY = "auto";
-                container.style.padding = "10px";
-                container.style.background = "#111";
+                container.innerHTML = "";
 
                 g_pChar.m_olContracts.forEach((contract) => {
                         let card = document.createElement("div");
@@ -13743,34 +13791,6 @@ var Anim = {};
                 Popup.contract(contract).onYes(() => {
                         acceptModern(contract);
                 });
-        }
-
-        function view() {
-                let theContract = tList.getSelected();
-                if (!theContract) return;
-
-                Popup.contract(theContract).onYes(() => {
-                        accept();
-                });
-        }
-
-        function accept() {
-                let theContract = tList.getSelected();
-                if (!theContract) return;
-
-                // User has accepted contract
-                g_pChar.m_pCurrentContract = theContract;
-                g_pChar.m_olContracts.remove(theContract); // remove contract from list
-
-                // If this is a Run Program contract, add the program to the user's deck
-                if (theContract.m_nType === CONT_RUN_PROGRAM) {
-                        // Add the program to run
-                        let nRating = Math.ceil( (theContract.m_nCorporation+1) / 5 );
-                        let pProgram = Program.create(PROGRAM_CLIENT, nRating);
-                        g_pChar.m_olSoftware.push(pProgram);
-                }
-
-                Popup.close();
         }
 
         function close() {
