@@ -12513,7 +12513,11 @@ var Anim = {};
                 }
         }
         function view_shop() {
-                Popup.shopview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_shopview();
+                } else {
+                        Popup.shopview();
+                }
         }
         function view_project() {
                 Popup.projects();
@@ -13335,120 +13339,9 @@ var Anim = {};
 
         function purchase() {
                 let pItem = tList.getSelected();
-
-                // See if we have enough money
-                if (g_pChar.m_nCredits < pItem.m_nPrice) {
-                        Popup.alert("You cannot afford this.");
-                        return;
-                }
-
-                // Process depending on type
-                switch (pItem.m_nType) {
-                        case IT_SOFTWARE:
-                                // Look for program of equivalent level or greater
-                                let bFound = null;
-                                g_pChar.m_olSoftware.forEach(pProgram => {
-                                        if (pProgram.m_nClass === pItem.m_nSubType) {
-                                                if (pProgram.m_nRating === pItem.m_nRating) {
-                                                        bFound = false;
-                                                } else if (pProgram.m_nRating > pItem.m_nRating) {
-                                                        if (bFound === null)
-                                                                bFound = true;
-                                                }
-                                        }
-                                });
-
-                                if (bFound === false) {
-                                        Popup.alert("You already own this type of program");
-                                        return;
-                                }
-                                if (bFound === true)
-                                        Popup.confirm("You already own a stronger version of this program. Do you still wish to buy it?").onYes(soft_purchase);
-                                else
-                                        soft_purchase();
-
-                                function soft_purchase() {
-                                        // Get the money
-                                        g_pChar.m_nCredits -= pItem.m_nPrice;
-
-                                        // Buy the program
-                                        let pProgram = Program.create(pItem.m_nSubType, pItem.m_nRating);
-
-                                        // Add it to the user's software list (sorted)
-                                        let i;
-                                        for (i=0; i<g_pChar.m_olSoftware.length; i++) {
-                                                let pListProgram = g_pChar.m_olSoftware[i];
-                                                if (pListProgram.m_nClass > pProgram.m_nClass) break;
-                                                if (pListProgram.m_nClass === pProgram.m_nClass && pListProgram.m_nRating < pProgram.m_nRating) break;
-                                        }
-                                        g_pChar.m_olSoftware.splice(i,0,pProgram);
-
-                                        Popup.alert("Program purchased.");
-                                        initFunc();
-                                }
-                                break;
-
-                        case IT_HARDWARE:
-                                // Look for hardware of equivalent level or greater
-                                if (g_pChar.m_nHardware[pItem.m_nSubType] >= pItem.m_nRating) {
-                                        Popup.alert("You already own this type of hardware.");
-                                        return;
-                                }
-
-                                // Check for chip burner and chips active
-                                if ( pItem.m_nSubType === HW_CHIP_BURNER && g_pChar.m_pChipBurning !== null )
-                                        Popup.confirm("Your currently have chips cooking. If you upgrade, these will be destroyed. Continue?").onYes(hard_purchase);
-                                else
-                                        hard_purchase();
-
-                                function hard_purchase() {
-                                        if ( pItem.m_nSubType === HW_CHIP_BURNER )
-                                                g_pChar.m_pChipBurning = null;
-
-                                        // Check for refund
-                                        if (g_pChar.m_nHardware[pItem.m_nSubType] !== 0) {
-                                                let iRefund = Math.floor( GetHardwarePrice(pItem.m_nSubType,g_pChar.m_nHardware[pItem.m_nSubType]) / 2 );
-                                                Popup.alert("Hardware purchased. You sold your old hardware for "+iRefund+"cr.");
-                                                g_pChar.m_nCredits += iRefund;
-                                        } else {
-                                                Popup.alert("Hardware purchased.");
-                                        }
-
-                                        // Set the hardware item
-                                        g_pChar.m_nHardware[pItem.m_nSubType] = pItem.m_nRating;
-
-                                        // Get the money
-                                        g_pChar.m_nCredits -= pItem.m_nPrice;
-
-                                        // Remove the item
-                                        g_pChar.m_olShopList.remove(pItem);
-
-                                        initFunc();
-                                }
-                                break;
-
-                        case IT_CHIP:
-                                // Look for hardware of equivalent level or greater
-                                if (g_pChar.m_nChip[pItem.m_nSubType] >= pItem.m_nRating) {
-                                        Popup.alert("You already own a chip of this rating or higher.");
-                                        return;
-                                }
-
-                                Popup.alert("Chip purchased.");
-
-                                // Save the chip
-                                g_pChar.m_nChip[pItem.m_nSubType] = pItem.m_nRating;
-
-                                // Get the money
-                                g_pChar.m_nCredits -= pItem.m_nPrice;
-
-                                // Remove the item
-                                g_pChar.m_olShopList.remove(pItem);
-                                break;
-                }
-
-                initFunc();
+                do_purchase(pItem, initFunc);
         }
+
         function specialOrder() {
                 // Is an order in progress
                 if (g_pChar.m_nOrderItemType !== -1) {
@@ -13457,6 +13350,204 @@ var Anim = {};
                         Popup.specorder();
                 }
         }
+        function close() {
+                Popup.close();
+        }
+
+}
+
+function do_purchase(pItem, callback) {
+        // See if we have enough money
+        if (g_pChar.m_nCredits < pItem.m_nPrice) {
+                Popup.alert("You cannot afford this.");
+                return;
+        }
+
+        // Process depending on type
+        switch (pItem.m_nType) {
+                case IT_SOFTWARE:
+                        // Look for program of equivalent level or greater
+                        let bFound = null;
+                        g_pChar.m_olSoftware.forEach(pProgram => {
+                                if (pProgram.m_nClass === pItem.m_nSubType) {
+                                        if (pProgram.m_nRating === pItem.m_nRating) {
+                                                bFound = false;
+                                        } else if (pProgram.m_nRating > pItem.m_nRating) {
+                                                if (bFound === null)
+                                                        bFound = true;
+                                        }
+                                }
+                        });
+
+                        if (bFound === false) {
+                                Popup.alert("You already own this type of program");
+                                return;
+                        }
+                        if (bFound === true)
+                                Popup.confirm("You already own a stronger version of this program. Do you still wish to buy it?").onYes(soft_purchase);
+                        else
+                                soft_purchase();
+
+                        function soft_purchase() {
+                                // Get the money
+                                g_pChar.m_nCredits -= pItem.m_nPrice;
+
+                                // Buy the program
+                                let pProgram = Program.create(pItem.m_nSubType, pItem.m_nRating);
+
+                                // Add it to the user's software list (sorted)
+                                let i;
+                                for (i=0; i<g_pChar.m_olSoftware.length; i++) {
+                                        let pListProgram = g_pChar.m_olSoftware[i];
+                                        if (pListProgram.m_nClass > pProgram.m_nClass) break;
+                                        if (pListProgram.m_nClass === pProgram.m_nClass && pListProgram.m_nRating < pProgram.m_nRating) break;
+                                }
+                                g_pChar.m_olSoftware.splice(i,0,pProgram);
+
+                                Popup.alert("Program purchased.");
+                                if (callback) callback();
+                        }
+                        break;
+
+                case IT_HARDWARE:
+                        // Look for hardware of equivalent level or greater
+                        if (g_pChar.m_nHardware[pItem.m_nSubType] >= pItem.m_nRating) {
+                                Popup.alert("You already own this type of hardware.");
+                                return;
+                        }
+
+                        // Check for chip burner and chips active
+                        if ( pItem.m_nSubType === HW_CHIP_BURNER && g_pChar.m_pChipBurning !== null )
+                                Popup.confirm("Your currently have chips cooking. If you upgrade, these will be destroyed. Continue?").onYes(hard_purchase);
+                        else
+                                hard_purchase();
+
+                        function hard_purchase() {
+                                if ( pItem.m_nSubType === HW_CHIP_BURNER )
+                                        g_pChar.m_pChipBurning = null;
+
+                                // Check for refund
+                                if (g_pChar.m_nHardware[pItem.m_nSubType] !== 0) {
+                                        let iRefund = Math.floor( GetHardwarePrice(pItem.m_nSubType,g_pChar.m_nHardware[pItem.m_nSubType]) / 2 );
+                                        Popup.alert("Hardware purchased. You sold your old hardware for "+iRefund+"cr.");
+                                        g_pChar.m_nCredits += iRefund;
+                                } else {
+                                        Popup.alert("Hardware purchased.");
+                                }
+
+                                // Set the hardware item
+                                g_pChar.m_nHardware[pItem.m_nSubType] = pItem.m_nRating;
+
+                                // Get the money
+                                g_pChar.m_nCredits -= pItem.m_nPrice;
+
+                                // Remove the item
+                                g_pChar.m_olShopList.remove(pItem);
+
+                                if (callback) callback();
+                        }
+                        break;
+
+                case IT_CHIP:
+                        // Look for hardware of equivalent level or greater
+                        if (g_pChar.m_nChip[pItem.m_nSubType] >= pItem.m_nRating) {
+                                Popup.alert("You already own a chip of this rating or higher.");
+                                return;
+                        }
+
+                        Popup.alert("Chip purchased.");
+
+                        // Save the chip
+                        g_pChar.m_nChip[pItem.m_nSubType] = pItem.m_nRating;
+
+                        // Get the money
+                        g_pChar.m_nCredits -= pItem.m_nPrice;
+
+                        // Remove the item
+                        g_pChar.m_olShopList.remove(pItem);
+                        
+                        if (callback) callback();
+                        break;
+        }
+}
+
+// popup_modern_shopview.js
+
+{
+        let [obj, h2, container, curMoney, btnSpec, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],
+                        ["div", {className:"flexH", style:{justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}, [
+                                ["div", {textContent:"Credits: "}, [
+                                        ["span", true, {style:{fontWeight:"bold", color:"#0f0"}}],
+                                ]],
+                                ["div", {className:"btnGroup"}, [
+                                        ["button", true, {textContent:"Special Order"}],
+                                        ["button", true, {textContent:"Close"}],
+                                ]],
+                        ]],
+                        ["div", true, {style:{display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gridGap:"10px", overflowY:"auto", flex:1, padding:"5px", background:"#111"}}],
+                ]],
+        );
+
+        Popup.onclick(btnSpec, specialOrder);
+        Popup.onclick(btnClose, close);
+
+        Popup.create("modern_shopview", obj).onInit(initFunc).onKey({"Escape":close});
+
+        function initFunc() {
+                h2.textContent = [
+                        "Thrifty Electronics",
+                        "The Little Warez Shop",
+                        "The Matrix Emporium",
+                        "Hacker's Haven",
+                        "Nullspace",
+                ][g_pChar.m_nLifestyle];
+                curMoney.textContent = g_pChar.m_nCredits + "cr";
+                renderCards();
+        }
+
+        function renderCards() {
+                container.innerHTML = "";
+                g_pChar.m_olShopList.forEach(pItem => {
+                        let card = document.createElement("div");
+                        card.className = "shop-card";
+                        
+                        let currentLevel = g_pChar.GetCurrentItemLevel(pItem.m_nType, pItem.m_nSubType) || "-";
+                        
+                        let iconX = -pItem.m_nType * 16;
+                        let iconHtml = `<icon style="background-position-x: ${iconX}px; display:inline-block; vertical-align:middle; margin-right:5px;"></icon>`;
+
+                        card.innerHTML = `
+                                <div class="shop-card-header">
+                                        ${iconHtml}
+                                        <span class="shop-card-title">${escapeHTML(pItem.m_szText)}</span>
+                                </div>
+                                <div class="shop-card-body">
+                                        <div class="shop-card-info"><span>Cost:</span> <span>${pItem.m_nPrice}cr</span></div>
+                                        <div class="shop-card-info"><span>Current:</span> <span>${currentLevel}</span></div>
+                                </div>
+                                <div class="shop-card-footer">
+                                        <button class="buy-btn" ${g_pChar.m_nCredits < pItem.m_nPrice ? 'disabled' : ''}>Buy</button>
+                                </div>
+                        `;
+
+                        card.querySelector(".buy-btn").onclick = (e) => {
+                                e.stopPropagation();
+                                do_purchase(pItem, initFunc);
+                        };
+                        container.appendChild(card);
+                });
+        }
+
+        function specialOrder() {
+                if (g_pChar.m_nOrderItemType !== -1) {
+                        Popup.alert("Your order will arrive in "+g_pChar.m_nOrderTimeLeft+" days.");
+                } else {
+                        Popup.specorder();
+                }
+        }
+
         function close() {
                 Popup.close();
         }
