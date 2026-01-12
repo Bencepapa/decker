@@ -12505,11 +12505,11 @@ var Anim = {};
                         Popup.contract();
                 } else {
                         // No contract selected
-                if (Config.m_bModernUI) {
-                        Popup.modern_contracts();
-                } else {
-                        Popup.contracts();
-                }
+                        if (Config.m_bModernUI) {
+                                Popup.modern_contracts();
+                        } else {
+                                Popup.contracts();
+                        }
                 }
         }
         function view_shop() {
