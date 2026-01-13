@@ -13515,8 +13515,13 @@ function do_purchase(pItem, callback) {
                         
                         let currentLevel = g_pChar.GetCurrentItemLevel(pItem.m_nType, pItem.m_nSubType) || "-";
                         
-                        let iconX = -pItem.m_nType * 16;
-                        let iconHtml = `<icon style="background-position-x: ${iconX}px; display:inline-block; vertical-align:middle; margin-right:5px;"></icon>`;
+                        let iconX = 0;
+                        switch (pItem.m_nType) {
+                                case IT_SOFTWARE: iconX = 0; break;
+                                case IT_CHIP: iconX = -32; break;
+                                case IT_HARDWARE: iconX = -16; break;
+                        }
+                        let iconHtml = `<icon style="background-position-x: ${iconX}px; display:inline-block; vertical-align:middle; margin-right:8px; width:16px; height:16px; image-rendering:pixelated;"></icon>`;
 
                         card.innerHTML = `
                                 <div class="shop-card-header">

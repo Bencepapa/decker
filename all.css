@@ -233,16 +233,12 @@ button:hover:not(:disabled) {
         gap: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
-.shop-card-header {
-        font-weight: bold;
-        color: #0ff;
-        border-bottom: 1px solid #444;
-        padding-bottom: 8px;
-        margin-bottom: 5px;
-        display: flex;
-        align-items: center;
-        font-size: 1.1em;
-        overflow: hidden;
+.shop-card-header icon {
+        width: 16px;
+        height: 16px;
+        background-image: url(img/items.png);
+        background-repeat: no-repeat;
+        flex-shrink: 0;
 }
 .shop-card-title {
         white-space: nowrap;
