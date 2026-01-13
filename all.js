@@ -756,22 +756,26 @@ tableList.prototype.clear = function() {
 }
 tableList.prototype.markRow = function(i, call_onclick=true, was_true_click=false) {
         // remove color from the previously selected row, if any
-        if (this.selected !== 0)
-                this.tBody.children[this.selected].classList.remove("marked");
+        if (this.selected !== 0) {
+                let prev = this.tBody.children[this.selected-1];
+                if (prev) prev.classList.remove("marked");
+        }
 
         // store new selection
         this.selected = i;
 
         // if something is selected, mark it
         if (i > 0) {
-                // pick the corresponding row
-                let row = this.tBody.children[i];
+                // pick the corresponding row (tbody now contains only data rows, 0-based)
+                let row = this.tBody.children[i-1];
 
-                // colorize it
-                row.className = "marked";
+                if (row) {
+                        // colorize it
+                        row.className = "marked";
 
-                // scroll if necessary to ensure the row is fully visible
-                this.scrollIfNeeded(i);
+                        // scroll if necessary to ensure the row is fully visible
+                        this.scrollIfNeeded(i);
+                }
         }
 
         if (call_onclick)
@@ -779,27 +783,29 @@ tableList.prototype.markRow = function(i, call_onclick=true, was_true_click=fals
 }
 tableList.prototype.visibles = function() {
         let boxRect = this.tBody.parentNode.parentNode.getBoundingClientRect();
-        let headerSize = this.tHead.children[0].clientHeight; // beware of the header!
+        let headerSize = (this.tHead.children[0] ? this.tHead.children[0].clientHeight : 0); // beware of the header!
 
         let first = null, last = null;
-        for (let r=1; r<=this.data.length; r++) {
+        for (let r=0; r < this.data.length; r++) {
                 let row = this.tBody.children[r];
+                if (!row) continue;
                 if ( first === null && row.getBoundingClientRect().top >= boxRect.top + headerSize )
-                        first = r;
+                        first = r + 1; // return 1-based row index to keep API consistent
                 if ( row.getBoundingClientRect().bottom <= boxRect.bottom+2 ) // +2 : weird fix
-                        last = r;
+                        last = r + 1;
         }
         return [first,last];
 }
 tableList.prototype.scrollIfNeeded = function(i, measureOnly) {
-        // pick the corresponding row
-        let row = this.tBody.children[i];
+        // pick the corresponding row (tbody now 0-based, selection is 1-based)
+        let row = this.tBody.children[i-1];
+        if (!row) return 0;
 
         // check if scroll is necessary
         let box = row.parentNode.parentNode.parentNode;
         let rowRect = row.getBoundingClientRect();
         let boxRect = box.getBoundingClientRect();
-        let headerSize = this.tHead.children[0].clientHeight; // beware of the header!
+        let headerSize = (this.tHead.children[0] ? this.tHead.children[0].clientHeight : 0); // beware of the header!
 
         let R = 0;
         if (rowRect.bottom > boxRect.bottom)
@@ -833,17 +839,20 @@ tableList.prototype.setContents = function(data, call_onclick=true) {
                 this.markRow( this.data.indexOf(oldSelected) + 1, call_onclick );
 }
 tableList.prototype.redraw = function() {
-        let html = "";
-        html += "<tr>";
+        // build header html
+        let headerHtml = "";
+        headerHtml += "<tr>";
         this.cols.forEach((col,i) => {
                 if (this.ignore.indexOf(i) >= 0) return; // ignore this column number
-                if (col[0] === null) return; // icon
-                html += "<th>" + escapeHTML(col[0]) + "</th>";
+                if (col[0] === null) return; // icon column - no header cell
+                headerHtml += "<th>" + escapeHTML(col[0]) + "</th>";
         });
-        html += "</tr>";
+        headerHtml += "</tr>";
 
+        // build body html (data rows only)
+        let bodyHtml = "";
         this.data.forEach(row => {
-                html += "<tr>";
+                bodyHtml += "<tr>";
                 let icon = "";
                 this.cols.forEach((col,i) => {
                         if (this.ignore.indexOf(i) >= 0) return; // ignore this column number
@@ -858,21 +867,22 @@ tableList.prototype.redraw = function() {
                                         icon = "<icon style='margin-left:2px;background-position-x:"+(-content*16)+"px'></icon>";
                                 }
                         } else {
-                                html += "<td>" + icon + escapeHTML(content) + "</td>";
+                                bodyHtml += "<td>" + icon + escapeHTML(content) + "</td>";
                                 icon = "";
                         }
                 });
-                html += "</tr>";
+                bodyHtml += "</tr>";
         });
 
-        this.tHead.innerHTML = html;
-        this.tBody.innerHTML = html;
+        this.tHead.innerHTML = headerHtml;
+        this.tBody.innerHTML = bodyHtml;
 
         // Ensure the table width is consistent
         let mainTable = this.tHead.parentNode;
         mainTable.style.width = "max-content";
         mainTable.style.minWidth = "100%";
 
+        // restore selection (markRow expects 1-based indices)
         this.markRow(this.selected, false);
 }
 
@@ -933,7 +943,7 @@ tableList.prototype.keyPUp = function(event) {
 
         // unless selected row is fully visible, and is not the first one visible, scroll so that the selected row is at the bottom
         if ( !(this.selected > first && this.selected <= last) ) {
-                this.scrollIfNeeded(0); // scroll to the first...
+                this.scrollIfNeeded(1); // scroll to the first...
                 this.scrollIfNeeded(this.selected); // then to the row...
         }
 
