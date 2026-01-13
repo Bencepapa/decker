@@ -1158,12 +1158,12 @@ Popup._show = function(id, ...p) {
 Popup.close = function(val) {
         let popups = document.getElementById("popups");
         let toClose = popups.lastElementChild;
+        if (!toClose) return;
         popups.removeChild(toClose);
 
-        let cb = Popup.activeList[Popup.activeList.length-1].callback;
-        Popup.activeList.pop();
-        if (cb)
-                cb(val);
+        let active = Popup.activeList.pop();
+        if (active && active.callback)
+                active.callback(val);
 }
 
 Popup.closeAll = function() {
