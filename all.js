@@ -1168,12 +1168,12 @@ Popup._show = function(id, ...p) {
 Popup.close = function(val) {
         let popups = document.getElementById("popups");
         let toClose = popups.lastElementChild;
+        if (!toClose) return;
         popups.removeChild(toClose);
 
-        let cb = Popup.activeList[Popup.activeList.length-1].callback;
-        Popup.activeList.pop();
-        if (cb)
-                cb(val);
+        let active = Popup.activeList.pop();
+        if (active && active.callback)
+                active.callback(val);
 }
 
 Popup.closeAll = function() {
@@ -12504,10 +12504,18 @@ var Anim = {};
 
 
         function view_char() {
-                Popup.charview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_charview();
+                } else {
+                        Popup.charview();
+                }
         }
         function view_deck() {
-                Popup.deckview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_deckview();
+                } else {
+                        Popup.deckview();
+                }
         }
         function view_contract() {
                 if (g_pChar.m_pCurrentContract !== null) {
@@ -12804,6 +12812,35 @@ var Anim = {};
 
 }
 
+// popup_modern_charview.js
+
+{
+        let [obj, h2, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],
+                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
+                                ["div", {textContent:"Modern Character Information", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
+                                ["div", {textContent:"This interface is under development.", style:{color:"#888"}}],
+                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
+                                        ["button", true, {textContent:"Close"}],
+                                ]],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnClose, close);
+
+        Popup.create("modern_charview", obj).onInit(initFunc).onKey({"Escape":close});
+
+        function initFunc() {
+                h2.textContent = g_pChar.m_szName + " - Modern Char Info";
+        }
+
+        function close() {
+                Popup.close();
+        }
+}
+
 // popup_deckview.js
 
 {
@@ -13003,8 +13040,11 @@ var Anim = {};
 
 
         function view_char() {
-                Popup.close();
-                Popup.charview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_charview();
+                } else {
+                        Popup.charview();
+                }
         }
         function close() {
                 Popup.close();
@@ -13184,6 +13224,27 @@ var Anim = {};
                 initFunc();
         }
 
+}
+
+// popup_modern_deckview.js
+{
+        let [obj, h2, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],
+                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
+                                ["div", {textContent:"Modern Cyberdeck Configuration", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
+                                ["div", {textContent:"Drag-and-drop rearrangement and new icons coming soon.", style:{color:"#888"}}],
+                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
+                                        ["button", true, {textContent:"Close"}],
+                                ]],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnClose, () => Popup.close());
+        Popup.create("modern_deckview", obj).onInit(() => {
+                h2.textContent = g_pChar.m_szName + " - Modern Deck Config";
+        }).onKey({"Escape":() => Popup.close()});
 }
 
 // popup_deckname.js
@@ -13484,19 +13545,19 @@ function do_purchase(pItem, callback) {
 // popup_modern_shopview.js
 
 {
-        let [obj, h2, container, curMoney, btnSpec, btnClose] = HTMLbuilder(
+        let [obj, h2, curMoney, btnSpec, btnClose, container] = HTMLbuilder(
                 ["div", true, {className:"modern-ui"}, [
                         ["h2", true],
                         ["div", {className:"flexH", style:{justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}, [
                                 ["div", {textContent:"Credits: "}, [
-                                        ["span", true, {style:{fontWeight:"bold", color:"#0f0"}}],
+                                        ["span", true, {style:{fontWeight:"bold", color:"#040"}}],
                                 ]],
                                 ["div", {className:"btnGroup"}, [
                                         ["button", true, {textContent:"Special Order"}],
                                         ["button", true, {textContent:"Close"}],
                                 ]],
                         ]],
-                        ["div", true, {style:{display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gridGap:"10px", overflowY:"auto", flex:1, padding:"5px", background:"#111"}}],
+                        ["div", true, {style:{display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gridGap:"12px", overflowY:"auto", flex:1, padding:"10px", background:"#111"}}],
                 ]],
         );
 
@@ -13525,20 +13586,26 @@ function do_purchase(pItem, callback) {
                         
                         let currentLevel = g_pChar.GetCurrentItemLevel(pItem.m_nType, pItem.m_nSubType) || "-";
                         
-                        let iconX = -pItem.m_nType * 16;
-                        let iconHtml = `<icon style="background-position-x: ${iconX}px; display:inline-block; vertical-align:middle; margin-right:5px;"></icon>`;
+                        let iconImg = "";
+                        switch (pItem.m_nType) {
+                                case IT_SOFTWARE: iconImg = "attached_assets/stock_images/cyberpunk_floppy_dis_78f255f0.jpg"; break;
+                                case IT_CHIP: iconImg = "attached_assets/stock_images/cyberpunk_electronic_850f6876.jpg"; break;
+                                case IT_HARDWARE: iconImg = "attached_assets/stock_images/cyberpunk_power_plug_f41afb99.jpg"; break;
+                        }
+                        let iconHtml = `<img src="${iconImg}" class="modern-shop-icon">`;
+                        let canAfford = g_pChar.m_nCredits >= pItem.m_nPrice;
 
                         card.innerHTML = `
                                 <div class="shop-card-header">
-                                        ${iconHtml}
                                         <span class="shop-card-title">${escapeHTML(pItem.m_szText)}</span>
                                 </div>
                                 <div class="shop-card-body">
-                                        <div class="shop-card-info"><span>Cost:</span> <span>${pItem.m_nPrice}cr</span></div>
                                         <div class="shop-card-info"><span>Current:</span> <span>${currentLevel}</span></div>
+                                        <div class="shop-card-info"><span style="color:${canAfford ? '#0f0' : '#f00'}">Cost: ${pItem.m_nPrice}cr</span></div>
                                 </div>
                                 <div class="shop-card-footer">
-                                        <button class="buy-btn" ${g_pChar.m_nCredits < pItem.m_nPrice ? 'disabled' : ''}>Buy</button>
+                                        <div class="shop-card-icon-container">${iconHtml}</div>
+                                        <button class="buy-btn" ${!canAfford ? 'disabled' : ''}>Buy</button>
                                 </div>
                         `;
 
@@ -13561,7 +13628,6 @@ function do_purchase(pItem, callback) {
         function close() {
                 Popup.close();
         }
-
 }
 
 // popup_specorder.js
