@@ -12494,10 +12494,18 @@ var Anim = {};
 
 
         function view_char() {
-                Popup.charview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_charview();
+                } else {
+                        Popup.charview();
+                }
         }
         function view_deck() {
-                Popup.deckview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_deckview();
+                } else {
+                        Popup.deckview();
+                }
         }
         function view_contract() {
                 if (g_pChar.m_pCurrentContract !== null) {
@@ -12794,6 +12802,35 @@ var Anim = {};
 
 }
 
+// popup_modern_charview.js
+
+{
+        let [obj, h2, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],
+                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
+                                ["div", {textContent:"Modern Character Information", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
+                                ["div", {textContent:"This interface is under development.", style:{color:"#888"}}],
+                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
+                                        ["button", true, {textContent:"Close"}],
+                                ]],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnClose, close);
+
+        Popup.create("modern_charview", obj).onInit(initFunc).onKey({"Escape":close});
+
+        function initFunc() {
+                h2.textContent = g_pChar.m_szName + " - Modern Char Info";
+        }
+
+        function close() {
+                Popup.close();
+        }
+}
+
 // popup_deckview.js
 
 {
@@ -12993,8 +13030,11 @@ var Anim = {};
 
 
         function view_char() {
-                Popup.close();
-                Popup.charview();
+                if (Config.m_bModernUI) {
+                        Popup.modern_charview();
+                } else {
+                        Popup.charview();
+                }
         }
         function close() {
                 Popup.close();
@@ -13174,6 +13214,27 @@ var Anim = {};
                 initFunc();
         }
 
+}
+
+// popup_modern_deckview.js
+{
+        let [obj, h2, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],
+                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
+                                ["div", {textContent:"Modern Cyberdeck Configuration", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
+                                ["div", {textContent:"Drag-and-drop rearrangement and new icons coming soon.", style:{color:"#888"}}],
+                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
+                                        ["button", true, {textContent:"Close"}],
+                                ]],
+                        ]],
+                ]],
+        );
+
+        Popup.onclick(btnClose, () => Popup.close());
+        Popup.create("modern_deckview", obj).onInit(() => {
+                h2.textContent = g_pChar.m_szName + " - Modern Deck Config";
+        }).onKey({"Escape":() => Popup.close()});
 }
 
 // popup_deckname.js
