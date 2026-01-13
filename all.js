@@ -13551,7 +13551,6 @@ function do_purchase(pItem, callback) {
         function close() {
                 Popup.close();
         }
-
 }
 
 // popup_specorder.js
