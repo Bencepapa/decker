@@ -13521,19 +13521,20 @@ function do_purchase(pItem, callback) {
                                 case IT_CHIP: iconX = -32; break;
                                 case IT_HARDWARE: iconX = -16; break;
                         }
-                        let iconHtml = `<icon style="background-position-x: ${iconX}px; display:inline-block; vertical-align:middle; margin-right:8px; width:16px; height:16px; image-rendering:pixelated;"></icon>`;
+                        let iconHtml = `<icon style="background-position-x: ${iconX}px; width:16px; height:16px; image-rendering:pixelated;"></icon>`;
+                        let canAfford = g_pChar.m_nCredits >= pItem.m_nPrice;
 
                         card.innerHTML = `
                                 <div class="shop-card-header">
-                                        ${iconHtml}
                                         <span class="shop-card-title">${escapeHTML(pItem.m_szText)}</span>
                                 </div>
                                 <div class="shop-card-body">
-                                        <div class="shop-card-info"><span>Cost:</span> <span>${pItem.m_nPrice}cr</span></div>
                                         <div class="shop-card-info"><span>Current:</span> <span>${currentLevel}</span></div>
+                                        <div class="shop-card-info"><span style="color:${canAfford ? '#0f0' : '#f00'}">Cost: ${pItem.m_nPrice}cr</span></div>
                                 </div>
                                 <div class="shop-card-footer">
-                                        <button class="buy-btn" ${g_pChar.m_nCredits < pItem.m_nPrice ? 'disabled' : ''}>Buy</button>
+                                        <div class="shop-card-icon-container">${iconHtml}</div>
+                                        <button class="buy-btn" ${!canAfford ? 'disabled' : ''}>Buy</button>
                                 </div>
                         `;
 
