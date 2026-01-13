@@ -13474,19 +13474,19 @@ function do_purchase(pItem, callback) {
 // popup_modern_shopview.js
 
 {
-        let [obj, h2, container, curMoney, btnSpec, btnClose] = HTMLbuilder(
+        let [obj, h2, curMoney, btnSpec, btnClose, container] = HTMLbuilder(
                 ["div", true, {className:"modern-ui"}, [
                         ["h2", true],
                         ["div", {className:"flexH", style:{justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}, [
                                 ["div", {textContent:"Credits: "}, [
-                                        ["span", true, {style:{fontWeight:"bold", color:"#0f0"}}],
+                                        ["span", true, {style:{fontWeight:"bold", color:"#040"}}],
                                 ]],
                                 ["div", {className:"btnGroup"}, [
                                         ["button", true, {textContent:"Special Order"}],
                                         ["button", true, {textContent:"Close"}],
                                 ]],
                         ]],
-                        ["div", true, {style:{display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gridGap:"10px", overflowY:"auto", flex:1, padding:"5px", background:"#111"}}],
+                        ["div", true, {style:{display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gridGap:"12px", overflowY:"auto", flex:1, padding:"10px", background:"#111"}}],
                 ]],
         );
 

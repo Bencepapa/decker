@@ -227,33 +227,62 @@ button:hover:not(:disabled) {
 .shop-card {
         background: #222;
         border: 1px solid #444;
-        padding: 10px;
+        padding: 15px;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 .shop-card-header {
         font-weight: bold;
         color: #0ff;
         border-bottom: 1px solid #444;
-        padding-bottom: 5px;
+        padding-bottom: 8px;
         margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        font-size: 1.1em;
+        overflow: hidden;
+}
+.shop-card-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+}
+.shop-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 }
 .shop-card-info {
         display: flex;
         justify-content: space-between;
-        font-size: 0.9em;
+        font-size: 1em;
+        color: #ccc;
+}
+.shop-card-info span:first-child {
+        color: #888;
 }
 .shop-card-footer {
-        margin-top: auto;
+        margin-top: 5px;
         text-align: right;
 }
 .buy-btn {
-        padding: 2px 10px;
+        padding: 6px 20px;
         cursor: pointer;
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+        transition: all 0.2s;
+}
+.buy-btn:hover:not(:disabled) {
+        background: #444;
+        border-color: #0ff;
+        color: #0ff;
 }
 .buy-btn:disabled {
-        opacity: 0.5;
+        opacity: 0.3;
         cursor: not-allowed;
 }
 .tableList td {
