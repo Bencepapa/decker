@@ -13515,13 +13515,13 @@ function do_purchase(pItem, callback) {
                         
                         let currentLevel = g_pChar.GetCurrentItemLevel(pItem.m_nType, pItem.m_nSubType) || "-";
                         
-                        let iconX = 0;
+                        let iconImg = "";
                         switch (pItem.m_nType) {
-                                case IT_SOFTWARE: iconX = 0; break;
-                                case IT_CHIP: iconX = -32; break;
-                                case IT_HARDWARE: iconX = -16; break;
+                                case IT_SOFTWARE: iconImg = "attached_assets/stock_images/cyberpunk_floppy_dis_78f255f0.jpg"; break;
+                                case IT_CHIP: iconImg = "attached_assets/stock_images/cyberpunk_electronic_850f6876.jpg"; break;
+                                case IT_HARDWARE: iconImg = "attached_assets/stock_images/cyberpunk_power_plug_f41afb99.jpg"; break;
                         }
-                        let iconHtml = `<icon style="background-position-x: ${iconX}px; width:16px; height:16px; image-rendering:pixelated;"></icon>`;
+                        let iconHtml = `<img src="${iconImg}" class="modern-shop-icon">`;
                         let canAfford = g_pChar.m_nCredits >= pItem.m_nPrice;
 
                         card.innerHTML = `
