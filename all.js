@@ -16031,7 +16031,8 @@ function do_purchase(pItem, callback) {
         }
 
         function update() {
-                txtTitle.textContent = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                txtTitle.textContent = g_pChar.m_pCurrentContract.m_szSystemName + "::" + currentNode;
                 txtSteps.textContent = "Steps: " + (g_pChar.m_nRunTime || 0);
         }
 
