@@ -12450,7 +12450,7 @@ var Anim = {};
 
 {
         let [obj] = HTMLbuilder(
-                ["div", true, {id:"popup_homeview"}, [
+                ["div", true, {id:"popup_homeview", style:{background:"#33f",color:"white"}}, [
                         ["h2", {textContent:"Decker @ Home"}],
                         ["div", {style:{background:"#33f",color:"white"}}, [
                                 ["li", [
@@ -16032,7 +16032,8 @@ function do_purchase(pItem, callback) {
 
         function update() {
                 let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
-                txtTitle.textContent = g_pChar.m_pCurrentContract.m_szSystemName + "::" + currentNode;
+                let shortenedSystemName = g_pChar.m_pCurrentContract.m_szSystemName.split('', 10).reduce((o, c) => o.length === 9 ? `${o}${c}...` : `${o}${c}` , '');
+                txtTitle.textContent = shortenedSystemName + "//" + currentNode;
                 txtSteps.textContent = "Steps: " + (g_pChar.m_nRunTime || 0);
         }
 
