@@ -13588,9 +13588,9 @@ function do_purchase(pItem, callback) {
                         
                         let iconImg = "";
                         switch (pItem.m_nType) {
-                                case IT_SOFTWARE: iconImg = "attached_assets/stock_images/cyberpunk_floppy_dis_78f255f0.jpg"; break;
-                                case IT_CHIP: iconImg = "attached_assets/stock_images/cyberpunk_electronic_850f6876.jpg"; break;
-                                case IT_HARDWARE: iconImg = "attached_assets/stock_images/cyberpunk_power_plug_f41afb99.jpg"; break;
+                                case IT_SOFTWARE: iconImg = "img_modern/png/disc.png"; break;
+                                case IT_CHIP: iconImg = "img_modern/png/processor.png"; break;
+                                case IT_HARDWARE: iconImg = "img_modern/png/jack-plug.png"; break;
                         }
                         let iconHtml = `<img src="${iconImg}" class="modern-shop-icon">`;
                         let canAfford = g_pChar.m_nCredits >= pItem.m_nPrice;
@@ -13600,8 +13600,10 @@ function do_purchase(pItem, callback) {
                                         <span class="shop-card-title">${escapeHTML(pItem.m_szText)}</span>
                                 </div>
                                 <div class="shop-card-body">
-                                        <div class="shop-card-info"><span>Current:</span> <span>${currentLevel}</span></div>
-                                        <div class="shop-card-info"><span style="color:${canAfford ? '#0f0' : '#f00'}">Cost: ${pItem.m_nPrice}cr</span></div>
+                                        <div class="shop-card-info">
+                                                <span style="color:${currentLevel >= pItem.m_nRating ? '#0f0' : '#f00'}">Current: ${currentLevel}</span>
+                                                <span style="color:${canAfford ? '#0f0' : '#f00'}">Cost: ${pItem.m_nPrice}cr</span>
+                                        </div>
                                 </div>
                                 <div class="shop-card-footer">
                                         <div class="shop-card-icon-container">${iconHtml}</div>

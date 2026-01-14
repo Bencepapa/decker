@@ -238,7 +238,7 @@ button:hover:not(:disabled) {
         margin-bottom: 5px;
         display: flex;
         align-items: center;
-        font-size: 1.3em;
+        font-size: 1.2em;
         overflow: hidden;
 }
 .shop-card-title {
