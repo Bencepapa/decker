@@ -134,6 +134,28 @@ button:hover:not(:disabled) {
         box-shadow: 0 0 0 1px black;
 }
 
+.popupWrapper.confirm {
+        background: rgba(0,0,0,.4);
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+}
+
+.popupWrapper.confirm > * {
+        width: auto;
+        min-height: auto;
+        max-width: 90%;
+        flex: none;
+}
+
+.popupWrapper.confirm > * > * {
+        border-style: solid;
+        border-left-width: 5px;
+        border-right-width: 5px;
+        border-color: rgba(255,255,255,0.6) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,255,255,0.6);
+        box-shadow: 0 0 0 1px black;
+}
+
 .popupWrapper > * > :first-child {
         border-radius: 0;
         border-top-width: 0;

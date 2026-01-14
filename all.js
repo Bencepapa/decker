@@ -1093,6 +1093,7 @@ var Popup = function(name,obj,nodiv) {
 }
 Popup.create = function(name,obj,nodiv) {
         let N = new Popup(name,obj,nodiv);
+        N.wrapper.className += " "+ name;
         Popup.popupList[name] = N;
         Popup[name] = (...p) => Popup._show(name, ...p);
 
