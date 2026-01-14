@@ -13252,26 +13252,26 @@ var Anim = {};
                 container.style.alignItems = "start";
 
                 const hwIcons = {
-                        [HW_CPU]: "img_modern/png/circuitry.png",
-                        [HW_COPROCESSOR]: "img_modern/png/processor.png",
-                        [HW_ATTACK_FW]: "img_modern/png/battered-axe.png",
-                        [HW_DEFENSE_FW]: "img_modern/png/checked-shield.png",
-                        [HW_STEALTH_FW]: "img_modern/png/spy.png",
-                        [HW_ANALYSIS_FW]: "img_modern/png/magnifying-glass.png"
+                        0: "img_modern/png/circuitry.png",      // HW_CPU
+                        1: "img_modern/png/processor.png",      // HW_COPROCESSOR
+                        2: "img_modern/png/battered-axe.png",    // HW_ATTACK_FW
+                        3: "img_modern/png/checked-shield.png", // HW_DEFENSE_FW
+                        4: "img_modern/png/spy.png",            // HW_STEALTH_FW
+                        5: "img_modern/png/magnifying-glass.png"// HW_ANALYSIS_FW
                 };
 
                 const hwNames = {
-                        [HW_CPU]: "CPU",
-                        [HW_COPROCESSOR]: "Coprocessor",
-                        [HW_ATTACK_FW]: "Attack FW",
-                        [HW_DEFENSE_FW]: "Defense FW",
-                        [HW_STEALTH_FW]: "Stealth FW",
-                        [HW_ANALYSIS_FW]: "Analysis FW"
+                        0: "CPU",
+                        1: "Coprocessor",
+                        2: "Attack FW",
+                        3: "Defense FW",
+                        4: "Stealth FW",
+                        5: "Analysis FW"
                 };
 
-                [HW_CPU, HW_COPROCESSOR, HW_ATTACK_FW, HW_DEFENSE_FW, HW_STEALTH_FW, HW_ANALYSIS_FW].forEach(id => {
+                [0, 1, 2, 3, 4, 5].forEach(id => {
                         let rating = g_pChar.m_nHardware[id];
-                        if (rating <= 0 && id !== HW_CPU) return;
+                        if (rating <= 0 && id !== 0) return;
 
                         let card = document.createElement("div");
                         card.className = "hw-card";
@@ -13298,7 +13298,7 @@ var Anim = {};
                 });
 
                 // Add optional hardware
-                for (let i=HW_DATA_CONVERTER; i<NUM_HW; i++) {
+                for (let i=9; i<NUM_HW; i++) {
                         if (g_pChar.m_nHardware[i]) {
                                 let card = document.createElement("div");
                                 card.className = "hw-card";
