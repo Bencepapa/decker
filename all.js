@@ -13229,15 +13229,12 @@ var Anim = {};
 
 // popup_modern_deckview.js
 {
-        let [obj, h2, btnClose] = HTMLbuilder(
+        let [obj, h2, container, btnClose] = HTMLbuilder(
                 ["div", true, {className:"modern-ui"}, [
                         ["h2", true],
-                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
-                                ["div", {textContent:"Modern Cyberdeck Configuration", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
-                                ["div", {textContent:"Drag-and-drop rearrangement and new icons coming soon.", style:{color:"#888"}}],
-                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
-                                        ["button", true, {textContent:"Close"}],
-                                ]],
+                        ["div", true, {className:"flexV", style:{padding:"20px", flex:1, overflowY:"auto"}}],
+                        ["div", {className:"btnGroup", style:{marginTop:"auto"}}, [
+                                ["button", true, {textContent:"Close"}],
                         ]],
                 ]],
         );
