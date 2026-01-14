@@ -13243,9 +13243,81 @@ var Anim = {};
         );
 
         Popup.onclick(btnClose, () => Popup.close());
-        Popup.create("modern_deckview", obj).onInit(() => {
+        Popup.create("modern_deckview", obj).onInit(renderCards).onKey({"Escape":() => Popup.close()});
+
+        function renderCards() {
                 h2.textContent = g_pChar.m_szName + " - Modern Deck Config";
-        }).onKey({"Escape":() => Popup.close()});
+                container.innerHTML = "";
+                container.style.display = "grid";
+                container.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+                container.style.gridGap = "15px";
+                container.style.padding = "20px";
+                container.style.alignItems = "start";
+
+                const hwIcons = {
+                        [HW_CPU]: "img_modern/png/circuitry.png",
+                        [HW_COPROCESSOR]: "img_modern/png/processor.png",
+                        [HW_ATTACK_FW]: "img_modern/png/battered-axe.png",
+                        [HW_DEFENSE_FW]: "img_modern/png/checked-shield.png",
+                        [HW_STEALTH_FW]: "img_modern/png/spy.png",
+                        [HW_ANALYSIS_FW]: "img_modern/png/magnifying-glass.png"
+                };
+
+                const hwNames = {
+                        [HW_CPU]: "CPU",
+                        [HW_COPROCESSOR]: "Coprocessor",
+                        [HW_ATTACK_FW]: "Attack FW",
+                        [HW_DEFENSE_FW]: "Defense FW",
+                        [HW_STEALTH_FW]: "Stealth FW",
+                        [HW_ANALYSIS_FW]: "Analysis FW"
+                };
+
+                [HW_CPU, HW_COPROCESSOR, HW_ATTACK_FW, HW_DEFENSE_FW, HW_STEALTH_FW, HW_ANALYSIS_FW].forEach(id => {
+                        let rating = g_pChar.m_nHardware[id];
+                        if (rating <= 0 && id !== HW_CPU) return;
+
+                        let card = document.createElement("div");
+                        card.className = "hw-card";
+                        card.style.background = "#222";
+                        card.style.border = "1px solid #444";
+                        card.style.padding = "10px";
+                        card.style.position = "relative";
+                        card.style.display = "flex";
+                        card.style.flexDirection = "column";
+                        card.style.alignItems = "center";
+                        card.style.minHeight = "120px";
+
+                        let iconPath = hwIcons[id] || "img_modern/png/processor.png";
+                        let name = hwNames[id] || GetHardwareName(id);
+
+                        card.innerHTML = `
+                                <div style="font-size: 0.8em; color: #888; margin-bottom: 10px; text-transform: uppercase;">${name}</div>
+                                <div style="position: relative; width: 64px; height: 64px;">
+                                        <img src="${iconPath}" style="width: 64px; height: 64px; object-fit: contain; opacity: 0.7;">
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; font-weight: bold; color: #0f0; text-shadow: 0 0 5px #000, 0 0 10px #0f0;">${rating}</div>
+                                </div>
+                        `;
+                        container.appendChild(card);
+                });
+
+                // Add optional hardware
+                for (let i=HW_DATA_CONVERTER; i<NUM_HW; i++) {
+                        if (g_pChar.m_nHardware[i]) {
+                                let card = document.createElement("div");
+                                card.className = "hw-card";
+                                card.style.background = "#1a1a1a";
+                                card.style.border = "1px solid #333";
+                                card.style.padding = "10px";
+                                card.style.textAlign = "center";
+                                card.innerHTML = `
+                                        <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">OPTIONAL</div>
+                                        <div style="color: #0c0;">${GetHardwareName(i)}</div>
+                                        <div style="font-size: 1.2em; font-weight: bold; color: #0f0;">Rating ${g_pChar.m_nHardware[i]}</div>
+                                `;
+                                container.appendChild(card);
+                        }
+                }
+        }
 }
 
 // popup_deckname.js
