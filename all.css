@@ -213,9 +213,6 @@ button:hover:not(:disabled) {
 .tableList thead tr:first-child {
         pointer-events: auto;
 }
-.tableList tbody tr:first-child {
-        display: none;
-}
 .tableList th {
         background: #bbb;
         border: 2px solid;

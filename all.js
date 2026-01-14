@@ -704,7 +704,7 @@ function tableList(obj, height, className, allowDeselect=true) {
                 let tr = e.target.parentNode;
                 if (tr.parentNode !== this.tBody) return; // shouldn't happen, but just in case...
 
-                let row = 0;
+                let row = 1;
                 while ( (tr = tr.previousSibling) !== null )
                         row++;
 
