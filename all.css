@@ -587,21 +587,24 @@ button:hover:not(:disabled) {
         border: 1px solid #0f0;
 }
 .hw-card {
-        background: #222;
-        border: 1px solid #444;
-        padding: 10px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 120px;
-        transition: transform 0.2s, border-color 0.2s;
+    background: #222;
+    border: 1px solid #444;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100px;
+    width: 100px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    gap: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 .hw-card:hover {
-        transform: translateY(-2px);
-        border-color: #0f0;
-}
-.hw-card img {
-        filter: drop-shadow(0 0 5px rgba(0,255,0,0.3));
+    transform: translateY(-2px);
+    border-color: #0f0;
 }
 

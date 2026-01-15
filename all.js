@@ -13246,7 +13246,7 @@ var Anim = {};
                 h2.textContent = g_pChar.m_szName + " - Modern Deck Config";
                 container.innerHTML = "";
                 container.style.display = "grid";
-                container.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+                container.style.gridTemplateColumns = "repeat(auto-fill, minmax(110px, 1fr))";
                 container.style.gridGap = "15px";
                 container.style.padding = "20px";
                 container.style.alignItems = "start";
@@ -13278,29 +13278,30 @@ var Anim = {};
                         let iconPath = hwIcons[id] || "img_modern/png/processor.png";
                         let name = hwNames[id];
 
+                        card.style.backgroundImage = `url(${iconPath})`;
+
                         card.innerHTML = `
-                                <div style="font-size: 0.8em; color: #888; margin-bottom: 10px; text-transform: uppercase;">${name}</div>
                                 <div style="position: relative; width: 64px; height: 64px;">
-                                        <img src="${iconPath}" style="position: absolute; width: 64px; height: 64px; object-fit: contain; opacity: 0.7;">
-                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; font-weight: bold; color: #0f0; text-shadow: 0 0 5px #000, 0 0 10px #0f0;">${rating}</div>
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: rgba(255, 255, 255, 1); text-shadow: 0 0 5px #222, 0 0 15px #0f0;">${rating}</div>
                                 </div>
+                                <div style="font-size: 1.5em; color: #ffffffff; margin-top: 32px; text-shadow: 0 0 5px #222, 0 0 10px rgba(0,0,0, 1);">${name}</div>
                         `;
                         container.appendChild(card);
                 });
 
                 // Add optional hardware
-                for (let i=9; i<NUM_HW; i++) {
-                        if (g_pChar.m_nHardware[i]) {
+                for (let i=0; i<NUM_HW; i++) {
+                        if (g_pChar.m_nHardware[i] !== 0) {
+                                let other_hw = GetHardwareString(i, g_pChar.m_nHardware[i]);
                                 let card = document.createElement("div");
                                 card.className = "hw-card";
-                                card.style.background = "#1a1a1a";
-                                card.style.border = "1px solid #333";
-                                card.style.padding = "10px";
-                                card.style.textAlign = "center";
+                                card.style.backgroundImage = `url(${"img_modern/png/jack-plug.png"})`;
+                                //card.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
                                 card.innerHTML = `
-                                        <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">OPTIONAL</div>
-                                        <div style="color: #0c0;">${GetHardwareName(i)}</div>
-                                        <div style="font-size: 1.2em; font-weight: bold; color: #0f0;">Rating ${g_pChar.m_nHardware[i]}</div>
+                                        <div style="position: relative; width: 64px; height: 64px;">
+                                                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: rgba(255, 255, 255, 1); text-shadow: 0 0 5px #222, 0 0 15px #0f0;">${g_pChar.m_nHardware[i]}</div>
+                                        </div>
+                                        <div style="font-size: 1.0em; color: #ffffffff; margin-top: 32px; text-shadow: 0 0 5px #222, 0 0 10px rgba(0,0,0, 1);">${other_hw}</div>
                                 `;
                                 container.appendChild(card);
                         }
