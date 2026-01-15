@@ -13307,8 +13307,19 @@ var Anim = {};
                         }
                 }
 
-                // Add program cards section
+// Add program cards section
                 if (g_pChar && g_pChar.m_olSoftware && g_pChar.m_olSoftware.length > 0) {
+                        // Ensure proper initialization of loaded ratings when not on a run
+                        if (!g_pChar.m_bOnRun) {
+                                g_pChar.m_olSoftware.forEach(pProgram => {
+                                        if (pProgram.m_bLoadByDefault) {
+                                                pProgram.m_nLoadedRating = pProgram.m_nRating;
+                                        } else {
+                                                pProgram.m_nLoadedRating = 0;
+                                        }
+                                });
+                        }
+                        
                         let sectionHeader = document.createElement("h3");
                         sectionHeader.textContent = "Programs";
                         sectionHeader.style.gridColumn = "1 / -1";
@@ -13333,6 +13344,7 @@ var Anim = {};
 
                         // Add current load display
                         let loadDisplay = document.createElement("div");
+                        loadDisplay.id = "load-display"; // Add ID for easy updating
                         loadDisplay.style.gridColumn = "1 / -1";
                         loadDisplay.style.marginTop = "15px";
                         loadDisplay.style.padding = "10px";
@@ -13342,24 +13354,33 @@ var Anim = {};
                         loadDisplay.style.color = "#0ff";
                         loadDisplay.style.fontSize = "0.9em";
                         loadDisplay.style.textAlign = "center";
-                        
-g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
-                        let currentLoad = g_pChar ? g_pChar.m_nCurrentLoad : 0;
-                        let [nLight, nHeavy, maxLoad] = g_pChar ? g_pChar.GetLoadRatings() : [0, 0, 0];
-                        
-                        // Get load status text
-                        let loadStatus = g_pChar ? 
-                            (g_pChar.m_nLoadStatus === LS_LIGHT ? "Light" :
-                             g_pChar.m_nLoadStatus === LS_HEAVY ? "Heavy" : "Average") : "Unknown";
-                        
-                        // Color code the load status
-                        let statusColor = g_pChar ?
-                            (g_pChar.m_nLoadStatus === LS_LIGHT ? "#0f0" :  // Green for Light (+1 bonus)
-                             g_pChar.m_nLoadStatus === LS_HEAVY ? "#f00" :    // Red for Heavy (-1 penalty)
-                             "#ff0") : "#fff";                                  // Yellow for Average
-                        
-                        loadDisplay.innerHTML = `Current Load: ${currentLoad} / ${maxLoad} (${maxLoad > 0 ? Math.round(currentLoad/maxLoad*100) : 0}%) - <span style="color: ${statusColor}; font-weight: bold;">${loadStatus}</span>`;
                         container.appendChild(loadDisplay);
+                        
+                        // Update load display function
+                        function updateLoadDisplay() {
+                                g_pChar.calcCurrentLoad();
+                                let currentLoad = g_pChar ? g_pChar.m_nCurrentLoad : 0;
+                                let [nLight, nHeavy, maxLoad] = g_pChar ? g_pChar.GetLoadRatings() : [0, 0, 0];
+                                
+                                // Get load status text
+                                let loadStatus = g_pChar ? 
+                                    (g_pChar.m_nLoadStatus === LS_LIGHT ? "Light" :
+                                     g_pChar.m_nLoadStatus === LS_HEAVY ? "Heavy" : "Average") : "Unknown";
+                                
+                                // Color code the load status
+                                let statusColor = g_pChar ?
+                                    (g_pChar.m_nLoadStatus === LS_LIGHT ? "#0f0" :  // Green for Light (+1 bonus)
+                                     g_pChar.m_nLoadStatus === LS_HEAVY ? "#f00" :    // Red for Heavy (-1 penalty)
+                                     "#ff0") : "#fff";                                  // Yellow for Average
+                                
+                                loadDisplay.innerHTML = `Current Load: ${currentLoad} / ${maxLoad} (${maxLoad > 0 ? Math.round(currentLoad/maxLoad*100) : 0}%) - <span style="color: ${statusColor}; font-weight: bold;">${loadStatus}</span>`;
+                        }
+                        
+                        // Initial load display update
+                        updateLoadDisplay();
+                        
+                        // Store update function globally for access from card functions
+                        window.updateProgramLoadDisplay = updateLoadDisplay;
                 }
         }
 
@@ -13369,13 +13390,8 @@ g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
                 card.draggable = true;
                 card.dataset.index = index;
 
-                // Determine if program is loaded (active)
-                let isLoaded = g_pChar.m_pActiveArmor === program || 
-                              g_pChar.m_pActiveShield === program || 
-                              g_pChar.m_pActiveHide === program || 
-                              g_pChar.m_pActiveScan === program || 
-                              g_pChar.m_pActiveReflect === program || 
-                              g_pChar.m_pActiveBoost === program;
+// Determine if program is loaded (check m_nLoadedRating > 0)
+                let isLoaded = program && program.m_nLoadedRating > 0;
 
                 // Determine if program is default
                 let isDefault = g_pChar.m_pDefAttackProgram === program || 
@@ -13477,19 +13493,17 @@ g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
                 return positions[programClass] || "0 0";
         }
 
-        function toggleProgramLoad(program, card) {
+function toggleProgramLoad(program, card) {
                 if (!g_pChar) return;
                 
-                // Toggle load status
-                let isLoaded = g_pChar.m_pActiveArmor === program || 
-                              g_pChar.m_pActiveShield === program || 
-                              g_pChar.m_pActiveHide === program || 
-                              g_pChar.m_pActiveScan === program || 
-                              g_pChar.m_pActiveReflect === program || 
-                              g_pChar.m_pActiveBoost === program;
+                // Determine if program is currently loaded by checking m_nLoadedRating > 0
+                let isLoaded = program.m_nLoadedRating > 0;
 
                 if (isLoaded) {
                         // Unload program
+                        program.m_nLoadedRating = 0;
+                        
+                        // Clear active program references
                         if (g_pChar.m_pActiveArmor === program) g_pChar.m_pActiveArmor = null;
                         if (g_pChar.m_pActiveShield === program) g_pChar.m_pActiveShield = null;
                         if (g_pChar.m_pActiveHide === program) g_pChar.m_pActiveHide = null;
@@ -13497,19 +13511,27 @@ g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
                         if (g_pChar.m_pActiveReflect === program) g_pChar.m_pActiveReflect = null;
                         if (g_pChar.m_pActiveBoost === program) g_pChar.m_pActiveBoost = null;
                 } else {
-                        // Load program (simplified - you may want to check compatibility)
+                        // Load program
+                        program.m_nLoadedRating = program.m_nRating;
+                        
+                        // Set active program references for the appropriate types
                         if (program.m_nClass === PROGRAM_ARMOR) g_pChar.m_pActiveArmor = program;
                         else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pActiveShield = program;
                         else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pActiveHide = program;
                         else if (program.m_nClass === PROGRAM_SCAN) g_pChar.m_pActiveScan = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pActiveReflect = program;
-                        else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
+else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
                 }
 
-                // Refresh the card
+                // Refresh the card and load display
                 let index = parseInt(card.dataset.index);
                 let newCard = createProgramCard(program, index);
                 card.parentNode.replaceChild(newCard, card);
+                
+                // Update load display
+                if (window.updateProgramLoadDisplay) {
+                        window.updateProgramLoadDisplay();
+                }
         }
 
         function toggleProgramDefault(program, card) {
@@ -13536,12 +13558,13 @@ g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
                         else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pDefShieldProgram = program;
                         else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pDefHide = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pDefReflect = program;
-                }
+}
 
                 // Refresh the card
                 let index = parseInt(card.dataset.index);
                 let newCard = createProgramCard(program, index);
                 card.parentNode.replaceChild(newCard, card);
+        }
         }
 
         function showProgramMenu(program, card, button) {
@@ -13635,10 +13658,9 @@ g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
                 return false;
         }
 
-        function handleDragEnd(e) {
+function handleDragEnd(e) {
                 this.style.opacity = '1';
         }
-}
 
 // popup_deckname.js
 
