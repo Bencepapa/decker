@@ -13307,7 +13307,7 @@ var Anim = {};
                         }
                 }
 
-// Add program cards section
+                // Add program cards section
                 if (g_pChar && g_pChar.m_olSoftware && g_pChar.m_olSoftware.length > 0) {
                         // Ensure proper initialization of loaded ratings when not on a run
                         if (!g_pChar.m_bOnRun) {
@@ -13408,7 +13408,7 @@ var Anim = {};
                 card.draggable = true;
                 card.dataset.index = index;
 
-// Determine if program is loaded (check m_nLoadedRating > 0)
+                // Determine if program is loaded (check m_nLoadedRating > 0)
                 let isLoaded = program && program.m_nLoadedRating > 0;
 
                 // Determine if program is default
@@ -13431,21 +13431,21 @@ var Anim = {};
                 let iconBg = `url(img/software.png)`;
                 let iconPos = getProgramIconPosition(program.m_nClass);
                 
-                // Get program details
-                let programName = GetSoftwareText(program.m_nClass, program.m_nRating);
+                // Get program details - use custom name if set, otherwise use default
+                let programName = (program.m_szName && program.m_szName !== "") ? program.m_szName : GetSoftwareText(program.m_nClass, program.m_nRating);
                 let className = g_szProgramClassName[program.m_nClass];
                 let size = GetProgramSize(program.m_nClass, program.m_nRating);
 
                 card.innerHTML = `
                         <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 40px; height: 40px; margin: 0 auto 8px;"></div>
-                        <div class="program-name" style="font-size: 0.8em; font-weight: bold; color: #fff; margin-bottom: 4px; text-align: center;">${programName}</div>
+                        <div class="program-name clickable-name" style="font-size: 0.8em; font-weight: bold; color: #fff; margin-bottom: 4px; text-align: center; cursor: pointer; text-decoration: underline;">${programName}</div>
                         <div class="program-class" style="font-size: 0.7em; color: #0ff; margin-bottom: 2px; text-align: center;">${className}</div>
                         <div class="program-rating" style="font-size: 0.7em; color: #ff0; margin-bottom: 2px; text-align: center;">Rating: ${program.m_nRating}</div>
                         <div class="program-size" style="font-size: 0.7em; color: #888; text-align: center;">Size: ${size}</div>
                         <div class="program-actions" style="margin-top: 8px; display: flex; gap: 4px; justify-content: center;">
                                 <button class="prog-btn load-btn" style="font-size: 0.6em; padding: 2px 6px;">${isLoaded ? "Unload" : "Load"}</button>
                                 <button class="prog-btn default-btn" style="font-size: 0.6em; padding: 2px 6px;">${isDefault ? "Undefault" : "Default"}</button>
-                                <button class="prog-btn more-btn" style="font-size: 0.6em; padding: 2px 6px;">...</button>
+                                <button class="prog-btn trash-btn" style="font-size: 0.6em; padding: 2px 6px; background: rgba(255, 0, 0, 0.2); border-color: #f00; color: #f00;">Trash</button>
                         </div>
                 `;
 
@@ -13455,10 +13455,11 @@ var Anim = {};
                 card.addEventListener('drop', handleDrop);
                 card.addEventListener('dragend', handleDragEnd);
 
-                // Add button event listeners
+                // Add event listeners
                 let loadBtn = card.querySelector('.load-btn');
                 let defaultBtn = card.querySelector('.default-btn');
-                let moreBtn = card.querySelector('.more-btn');
+                let trashBtn = card.querySelector('.trash-btn');
+                let nameElement = card.querySelector('.clickable-name');
 
                 loadBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -13470,9 +13471,14 @@ var Anim = {};
                         toggleProgramDefault(program, card);
                 });
 
-                moreBtn.addEventListener('click', (e) => {
+                trashBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        showProgramMenu(program, card, moreBtn);
+                        trashProgram(program, card);
+                });
+
+                nameElement.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        renameProgram(program, card, nameElement);
                 });
 
                 return card;
@@ -13511,7 +13517,7 @@ var Anim = {};
                 return positions[programClass] || "0 0";
         }
 
-function toggleProgramLoad(program, card) {
+        function toggleProgramLoad(program, card) {
                 if (!g_pChar) return;
                 
                 // Determine if program is currently loaded by checking m_nLoadedRating > 0
@@ -13538,7 +13544,7 @@ function toggleProgramLoad(program, card) {
                         else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pActiveHide = program;
                         else if (program.m_nClass === PROGRAM_SCAN) g_pChar.m_pActiveScan = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pActiveReflect = program;
-else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
+                        else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
                 }
 
                 // Refresh the card and load display
@@ -13576,65 +13582,66 @@ else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM
                         else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pDefShieldProgram = program;
                         else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pDefHide = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pDefReflect = program;
-}
+                }
 
                 // Refresh the card
                 let index = parseInt(card.dataset.index);
                 let newCard = createProgramCard(program, index);
                 card.parentNode.replaceChild(newCard, card);
         }
+
+
+        function trashProgram(program, card) {
+                if (!g_pChar) return;
+                
+                // Use Popup.confirm for confirmation
+                Popup.confirm(`Are you sure you want to trash "${GetSoftwareText(program.m_nClass, program.m_nRating)}"?`).onYes(() => {
+                        // Remove from active/default references
+                        if (g_pChar.m_pActiveArmor === program) g_pChar.m_pActiveArmor = null;
+                        if (g_pChar.m_pActiveShield === program) g_pChar.m_pActiveShield = null;
+                        if (g_pChar.m_pActiveHide === program) g_pChar.m_pActiveHide = null;
+                        if (g_pChar.m_pActiveScan === program) g_pChar.m_pActiveScan = null;
+                        if (g_pChar.m_pActiveReflect === program) g_pChar.m_pActiveReflect = null;
+                        if (g_pChar.m_pActiveBoost === program) g_pChar.m_pActiveBoost = null;
+                        
+                        if (g_pChar.m_pDefAttackProgram === program) g_pChar.m_pDefAttackProgram = null;
+                        if (g_pChar.m_pDefArmorProgram === program) g_pChar.m_pDefArmorProgram = null;
+                        if (g_pChar.m_pDefShieldProgram === program) g_pChar.m_pDefShieldProgram = null;
+                        if (g_pChar.m_pDefHide === program) g_pChar.m_pDefHide = null;
+                        if (g_pChar.m_pDefReflect === program) g_pChar.m_pDefReflect = null;
+                        
+                        // Remove from software array
+                        let index = g_pChar.m_olSoftware.indexOf(program);
+                        if (index > -1) {
+                                g_pChar.m_olSoftware.splice(index, 1);
+                        }
+                        
+                        // Remove card from DOM
+                        card.remove();
+                        
+                        // Update load display
+                        if (window.updateProgramLoadDisplay) {
+                                window.updateProgramLoadDisplay();
+                        }
+                });
         }
 
-        function showProgramMenu(program, card, button) {
-                // Create context menu
-                let menu = document.createElement("div");
-                menu.className = "program-menu";
-                menu.style.position = "absolute";
-                menu.style.backgroundColor = "#222";
-                menu.style.border = "1px solid #0ff";
-                menu.style.borderRadius = "5px";
-                menu.style.padding = "5px 0";
-                menu.style.zIndex = "1000";
-                menu.style.minWidth = "120px";
-
-                menu.innerHTML = `
-                        <div class="menu-item" style="padding: 8px 15px; color: #fff; cursor: pointer; font-size: 0.8em;">Rename</div>
-                        <div class="menu-item" style="padding: 8px 15px; color: #f00; cursor: pointer; font-size: 0.8em;">Trash</div>
-                `;
-
-                // Position menu
-                let rect = button.getBoundingClientRect();
-                menu.style.left = rect.left + "px";
-                menu.style.top = (rect.bottom + 5) + "px";
-
-                // Add to document
-                document.body.appendChild(menu);
-
-                // Add event listeners
-                let renameItem = menu.querySelector('.menu-item:first-child');
-                let trashItem = menu.querySelector('.menu-item:last-child');
-
-                renameItem.addEventListener('click', () => {
-                        document.body.removeChild(menu);
-                        // TODO: Implement rename functionality
-                        alert("Rename functionality to be implemented");
+        function renameProgram(program, card, nameElement) {
+                if (!g_pChar) return;
+                
+                // Use existing deckname popup for renaming
+                let currentName = (program.m_szName && program.m_szName !== "") ? program.m_szName : GetSoftwareText(program.m_nClass, program.m_nRating);
+                
+                // Open deckname popup with current name
+                Popup.deckname().then((newName) => {
+                        if (newName && newName.trim()) {
+                                // Set the custom name on the program
+                                program.m_szName = newName.trim();
+                                
+                                // Update the display
+                                nameElement.textContent = newName.trim();
+                        }
                 });
-
-                trashItem.addEventListener('click', () => {
-                        document.body.removeChild(menu);
-                        // TODO: Implement trash functionality
-                        alert("Trash functionality to be implemented");
-                });
-
-                // Close menu when clicking outside
-                setTimeout(() => {
-                        document.addEventListener('click', function closeMenu(e) {
-                                if (!menu.contains(e.target)) {
-                                        document.body.removeChild(menu);
-                                        document.removeEventListener('click', closeMenu);
-                                }
-                        });
-                }, 100);
         }
 
         // Drag and drop functionality
@@ -13676,9 +13683,10 @@ else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM
                 return false;
         }
 
-function handleDragEnd(e) {
+        function handleDragEnd(e) {
                 this.style.opacity = '1';
         }
+}
 
 // popup_deckname.js
 
