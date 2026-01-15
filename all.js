@@ -13252,45 +13252,36 @@ var Anim = {};
                 container.style.alignItems = "start";
 
                 const hwIcons = {
-                        0: "img_modern/png/circuitry.png",      // HW_CPU
-                        1: "img_modern/png/processor.png",      // HW_COPROCESSOR
-                        2: "img_modern/png/battered-axe.png",    // HW_ATTACK_FW
-                        3: "img_modern/png/checked-shield.png", // HW_DEFENSE_FW
-                        4: "img_modern/png/spy.png",            // HW_STEALTH_FW
-                        5: "img_modern/png/magnifying-glass.png"// HW_ANALYSIS_FW
+                        [CHIP_CPU]:        "img_modern/png/circuitry.png",
+                        [CHIP_COPROCESSOR]:"img_modern/png/processor.png",
+                        [CHIP_ATTACK]:     "img_modern/png/battered-axe.png",
+                        [CHIP_DEFENSE]:    "img_modern/png/checked-shield.png",
+                        [CHIP_STEALTH]:    "img_modern/png/spy.png",
+                        [CHIP_ANALYSIS]:   "img_modern/png/magnifying-glass.png"
                 };
 
                 const hwNames = {
-                        0: "CPU",
-                        1: "Coprocessor",
-                        2: "Attack FW",
-                        3: "Defense FW",
-                        4: "Stealth FW",
-                        5: "Analysis FW"
+                        [CHIP_CPU]:        "CPU",
+                        [CHIP_COPROCESSOR]:"Coprocessor",
+                        [CHIP_ATTACK]:     "Attack FW",
+                        [CHIP_DEFENSE]:    "Defense FW",
+                        [CHIP_STEALTH]:    "Stealth FW",
+                        [CHIP_ANALYSIS]:   "Analysis FW"
                 };
 
-                [0, 1, 2, 3, 4, 5].forEach(id => {
-                        let rating = g_pChar.m_nHardware[id];
-                        if (rating <= 0 && id !== 0) return;
+                [CHIP_CPU, CHIP_COPROCESSOR, CHIP_ATTACK, CHIP_DEFENSE, CHIP_STEALTH, CHIP_ANALYSIS].forEach(id => {
+                        let rating = g_pChar.m_nChip[id];
 
                         let card = document.createElement("div");
                         card.className = "hw-card";
-                        card.style.background = "#222";
-                        card.style.border = "1px solid #444";
-                        card.style.padding = "10px";
-                        card.style.position = "relative";
-                        card.style.display = "flex";
-                        card.style.flexDirection = "column";
-                        card.style.alignItems = "center";
-                        card.style.minHeight = "120px";
 
                         let iconPath = hwIcons[id] || "img_modern/png/processor.png";
-                        let name = hwNames[id] || GetHardwareName(id);
+                        let name = hwNames[id];
 
                         card.innerHTML = `
                                 <div style="font-size: 0.8em; color: #888; margin-bottom: 10px; text-transform: uppercase;">${name}</div>
                                 <div style="position: relative; width: 64px; height: 64px;">
-                                        <img src="${iconPath}" style="width: 64px; height: 64px; object-fit: contain; opacity: 0.7;">
+                                        <img src="${iconPath}" style="position: absolute; width: 64px; height: 64px; object-fit: contain; opacity: 0.7;">
                                         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; font-weight: bold; color: #0f0; text-shadow: 0 0 5px #000, 0 0 10px #0f0;">${rating}</div>
                                 </div>
                         `;
