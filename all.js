@@ -13358,8 +13358,26 @@ var Anim = {};
                         
                         // Update load display function
                         function updateLoadDisplay() {
-                                g_pChar.calcCurrentLoad();
-                                let currentLoad = g_pChar ? g_pChar.m_nCurrentLoad : 0;
+                                // Custom load calculation that respects manual changes
+                                let currentLoad = 0;
+                                if (g_pChar && g_pChar.m_olSoftware) {
+                                        g_pChar.m_olSoftware.forEach(pProgram => {
+                                                if (pProgram.m_nLoadedRating > 0) {
+                                                        currentLoad += pProgram.GetSize();
+                                                }
+                                        });
+                                        g_pChar.m_nCurrentLoad = currentLoad;
+                                        
+                                        // Update load status
+                                        let [nLight, nHeavy, maxLoad] = g_pChar.GetLoadRatings();
+                                        if (currentLoad < nLight)
+                                                g_pChar.m_nLoadStatus = LS_LIGHT;
+                                        else if (currentLoad > nHeavy)
+                                                g_pChar.m_nLoadStatus = LS_HEAVY;
+                                        else
+                                                g_pChar.m_nLoadStatus = LS_NORMAL;
+                                }
+                                
                                 let [nLight, nHeavy, maxLoad] = g_pChar ? g_pChar.GetLoadRatings() : [0, 0, 0];
                                 
                                 // Get load status text
