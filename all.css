@@ -608,3 +608,62 @@ button:hover:not(:disabled) {
     border-color: #0f0;
 }
 
+/* Program Cards */
+.program-card {
+    background: #555;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: move;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.program-card:hover {
+    transform: translateY(-2px);
+    border-color: #0ff;
+    box-shadow: 0 6px 12px rgba(0, 255, 255, 0.3);
+}
+
+.program-card.dragging {
+    opacity: 0.5;
+}
+
+.program-icon {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 40px 40px;
+    border-radius: 4px;
+}
+
+.prog-btn {
+    background: rgba(0, 255, 255, 0.2);
+    border: 1px solid #0ff;
+    border-radius: 3px;
+    color: #0ff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.prog-btn:hover {
+    background: rgba(0, 255, 255, 0.3);
+    border-color: #fff;
+    color: #fff;
+}
+
+.prog-btn:active {
+    transform: scale(0.95);
+}
+
+.program-menu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.program-menu .menu-item:hover {
+    background: rgba(0, 255, 255, 0.2);
+    color: #0ff;
+}
+

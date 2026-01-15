@@ -13306,6 +13306,324 @@ var Anim = {};
                                 container.appendChild(card);
                         }
                 }
+
+                // Add program cards section
+                if (g_pChar && g_pChar.m_olSoftware && g_pChar.m_olSoftware.length > 0) {
+                        let sectionHeader = document.createElement("h3");
+                        sectionHeader.textContent = "Programs";
+                        sectionHeader.style.gridColumn = "1 / -1";
+                        sectionHeader.style.marginTop = "20px";
+                        sectionHeader.style.marginBottom = "10px";
+                        sectionHeader.style.color = "#0ff";
+                        container.appendChild(sectionHeader);
+
+                        // Create program cards container for drag-drop
+                        let programContainer = document.createElement("div");
+                        programContainer.style.gridColumn = "1 / -1";
+                        programContainer.style.display = "grid";
+                        programContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(140px, 1fr))";
+                        programContainer.style.gridGap = "15px";
+                        container.appendChild(programContainer);
+
+                        // Render program cards
+                        (g_pChar.m_olSoftware || []).forEach((program, index) => {
+                                let card = createProgramCard(program, index);
+                                programContainer.appendChild(card);
+                        });
+
+                        // Add current load display
+                        let loadDisplay = document.createElement("div");
+                        loadDisplay.style.gridColumn = "1 / -1";
+                        loadDisplay.style.marginTop = "15px";
+                        loadDisplay.style.padding = "10px";
+                        loadDisplay.style.backgroundColor = "rgba(0, 255, 255, 0.1)";
+                        loadDisplay.style.border = "1px solid #0ff";
+                        loadDisplay.style.borderRadius = "5px";
+                        loadDisplay.style.color = "#0ff";
+                        loadDisplay.style.fontSize = "0.9em";
+                        loadDisplay.style.textAlign = "center";
+                        
+                        let currentLoad = g_pChar ? g_pChar.calcCurrentLoad() : 0;
+                        let maxLoad = g_pChar ? g_pChar.m_nMemory : 0;
+                        loadDisplay.textContent = `Current Load: ${currentLoad} / ${maxLoad} (${maxLoad > 0 ? Math.round(currentLoad/maxLoad*100) : 0}%)`;
+                        container.appendChild(loadDisplay);
+                }
+        }
+
+        function createProgramCard(program, index) {
+                let card = document.createElement("div");
+                card.className = "program-card";
+                card.draggable = true;
+                card.dataset.index = index;
+
+                // Determine if program is loaded (active)
+                let isLoaded = g_pChar.m_pActiveArmor === program || 
+                              g_pChar.m_pActiveShield === program || 
+                              g_pChar.m_pActiveHide === program || 
+                              g_pChar.m_pActiveScan === program || 
+                              g_pChar.m_pActiveReflect === program || 
+                              g_pChar.m_pActiveBoost === program;
+
+                // Determine if program is default
+                let isDefault = g_pChar.m_pDefAttackProgram === program || 
+                               g_pChar.m_pDefArmorProgram === program || 
+                               g_pChar.m_pDefShieldProgram === program || 
+                               g_pChar.m_pDefHideProgram === program || 
+                               g_pChar.m_pDefReflectProgram === program;
+
+                // Set background color based on load status
+                card.style.backgroundColor = isLoaded ? "#222" : "#555";
+
+                // Add special border for default programs
+                if (isDefault) {
+                        card.style.border = "2px solid #ff0";
+                        card.style.boxShadow = "0 0 10px rgba(255, 255, 0, 0.5)";
+                }
+
+                // Get program icon (using sprite positioning)
+                let iconBg = `url(img/software.png)`;
+                let iconPos = getProgramIconPosition(program.m_nClass);
+                
+                // Get program details
+                let programName = GetSoftwareText(program.m_nClass, program.m_nRating);
+                let className = g_szProgramClassName[program.m_nClass];
+                let size = GetProgramSize(program.m_nClass, program.m_nRating);
+
+                card.innerHTML = `
+                        <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 40px; height: 40px; margin: 0 auto 8px;"></div>
+                        <div class="program-name" style="font-size: 0.8em; font-weight: bold; color: #fff; margin-bottom: 4px; text-align: center;">${programName}</div>
+                        <div class="program-class" style="font-size: 0.7em; color: #0ff; margin-bottom: 2px; text-align: center;">${className}</div>
+                        <div class="program-rating" style="font-size: 0.7em; color: #ff0; margin-bottom: 2px; text-align: center;">Rating: ${program.m_nRating}</div>
+                        <div class="program-size" style="font-size: 0.7em; color: #888; text-align: center;">Size: ${size}</div>
+                        <div class="program-actions" style="margin-top: 8px; display: flex; gap: 4px; justify-content: center;">
+                                <button class="prog-btn load-btn" style="font-size: 0.6em; padding: 2px 6px;">${isLoaded ? "Unload" : "Load"}</button>
+                                <button class="prog-btn default-btn" style="font-size: 0.6em; padding: 2px 6px;">${isDefault ? "Undefault" : "Default"}</button>
+                                <button class="prog-btn more-btn" style="font-size: 0.6em; padding: 2px 6px;">...</button>
+                        </div>
+                `;
+
+                // Add drag and drop event listeners
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragend', handleDragEnd);
+
+                // Add button event listeners
+                let loadBtn = card.querySelector('.load-btn');
+                let defaultBtn = card.querySelector('.default-btn');
+                let moreBtn = card.querySelector('.more-btn');
+
+                loadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleProgramLoad(program, card);
+                });
+
+                defaultBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleProgramDefault(program, card);
+                });
+
+                moreBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showProgramMenu(program, card, moreBtn);
+                });
+
+                return card;
+        }
+
+        function getProgramIconPosition(programClass) {
+                // Map program class to sprite position (simplified - you may need to adjust)
+                const positions = {
+                        0: "0 0",      // ATTACK
+                        1: "-40px 0",  // ATTACK_A  
+                        2: "-80px 0",  // ATTACK_P
+                        3: "-120px 0", // SLOW
+                        4: "-160px 0", // VIRUS
+                        5: "-200px 0", // SILENCE
+                        6: "-240px 0", // CONFUSE
+                        7: "-280px 0", // WEAKEN
+                        8: "0 -40px",  // SHIELD
+                        9: "-40px -40px", // SMOKE
+                        10: "-80px -40px", // DECOY
+                        11: "-120px -40px", // MEDIC
+                        12: "-160px -40px", // ARMOR
+                        13: "-200px -40px", // HIDE
+                        14: "-240px -40px", // DECEIVE
+                        15: "-280px -40px", // RELOCATE
+                        16: "0 -80px",  // ANALYZE
+                        17: "-40px -80px", // SCAN
+                        18: "-80px -80px", // EVALUATE
+                        19: "-120px -80px", // DECRYPT
+                        20: "-160px -80px", // REFLECT
+                        21: "-200px -80px", // ATTACK_BOOST
+                        22: "-240px -80px", // DEFENSE_BOOST
+                        23: "-280px -80px", // STEALTH_BOOST
+                        24: "0 -120px", // ANALYSIS_BOOST
+                        25: "-40px -120px" // CLIENT
+                };
+                return positions[programClass] || "0 0";
+        }
+
+        function toggleProgramLoad(program, card) {
+                if (!g_pChar) return;
+                
+                // Toggle load status
+                let isLoaded = g_pChar.m_pActiveArmor === program || 
+                              g_pChar.m_pActiveShield === program || 
+                              g_pChar.m_pActiveHide === program || 
+                              g_pChar.m_pActiveScan === program || 
+                              g_pChar.m_pActiveReflect === program || 
+                              g_pChar.m_pActiveBoost === program;
+
+                if (isLoaded) {
+                        // Unload program
+                        if (g_pChar.m_pActiveArmor === program) g_pChar.m_pActiveArmor = null;
+                        if (g_pChar.m_pActiveShield === program) g_pChar.m_pActiveShield = null;
+                        if (g_pChar.m_pActiveHide === program) g_pChar.m_pActiveHide = null;
+                        if (g_pChar.m_pActiveScan === program) g_pChar.m_pActiveScan = null;
+                        if (g_pChar.m_pActiveReflect === program) g_pChar.m_pActiveReflect = null;
+                        if (g_pChar.m_pActiveBoost === program) g_pChar.m_pActiveBoost = null;
+                } else {
+                        // Load program (simplified - you may want to check compatibility)
+                        if (program.m_nClass === PROGRAM_ARMOR) g_pChar.m_pActiveArmor = program;
+                        else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pActiveShield = program;
+                        else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pActiveHide = program;
+                        else if (program.m_nClass === PROGRAM_SCAN) g_pChar.m_pActiveScan = program;
+                        else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pActiveReflect = program;
+                        else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
+                }
+
+                // Refresh the card
+                let index = parseInt(card.dataset.index);
+                let newCard = createProgramCard(program, index);
+                card.parentNode.replaceChild(newCard, card);
+        }
+
+        function toggleProgramDefault(program, card) {
+                if (!g_pChar) return;
+                
+                // Toggle default status
+                let isDefault = g_pChar.m_pDefAttackProgram === program || 
+                               g_pChar.m_pDefArmorProgram === program || 
+                               g_pChar.m_pDefShieldProgram === program || 
+                               g_pChar.m_pDefHide === program || 
+                               g_pChar.m_pDefReflect === program;
+
+                if (isDefault) {
+                        // Remove from default
+                        if (g_pChar.m_pDefAttackProgram === program) g_pChar.m_pDefAttackProgram = null;
+                        if (g_pChar.m_pDefArmorProgram === program) g_pChar.m_pDefArmorProgram = null;
+                        if (g_pChar.m_pDefShieldProgram === program) g_pChar.m_pDefShieldProgram = null;
+                        if (g_pChar.m_pDefHide === program) g_pChar.m_pDefHide = null;
+                        if (g_pChar.m_pDefReflect === program) g_pChar.m_pDefReflect = null;
+                } else {
+                        // Set as default (simplified - you may want to check compatibility)
+                        if (program.m_nClass === PROGRAM_ATTACK) g_pChar.m_pDefAttackProgram = program;
+                        else if (program.m_nClass === PROGRAM_ARMOR) g_pChar.m_pDefArmorProgram = program;
+                        else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pDefShieldProgram = program;
+                        else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pDefHide = program;
+                        else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pDefReflect = program;
+                }
+
+                // Refresh the card
+                let index = parseInt(card.dataset.index);
+                let newCard = createProgramCard(program, index);
+                card.parentNode.replaceChild(newCard, card);
+        }
+
+        function showProgramMenu(program, card, button) {
+                // Create context menu
+                let menu = document.createElement("div");
+                menu.className = "program-menu";
+                menu.style.position = "absolute";
+                menu.style.backgroundColor = "#222";
+                menu.style.border = "1px solid #0ff";
+                menu.style.borderRadius = "5px";
+                menu.style.padding = "5px 0";
+                menu.style.zIndex = "1000";
+                menu.style.minWidth = "120px";
+
+                menu.innerHTML = `
+                        <div class="menu-item" style="padding: 8px 15px; color: #fff; cursor: pointer; font-size: 0.8em;">Rename</div>
+                        <div class="menu-item" style="padding: 8px 15px; color: #f00; cursor: pointer; font-size: 0.8em;">Trash</div>
+                `;
+
+                // Position menu
+                let rect = button.getBoundingClientRect();
+                menu.style.left = rect.left + "px";
+                menu.style.top = (rect.bottom + 5) + "px";
+
+                // Add to document
+                document.body.appendChild(menu);
+
+                // Add event listeners
+                let renameItem = menu.querySelector('.menu-item:first-child');
+                let trashItem = menu.querySelector('.menu-item:last-child');
+
+                renameItem.addEventListener('click', () => {
+                        document.body.removeChild(menu);
+                        // TODO: Implement rename functionality
+                        alert("Rename functionality to be implemented");
+                });
+
+                trashItem.addEventListener('click', () => {
+                        document.body.removeChild(menu);
+                        // TODO: Implement trash functionality
+                        alert("Trash functionality to be implemented");
+                });
+
+                // Close menu when clicking outside
+                setTimeout(() => {
+                        document.addEventListener('click', function closeMenu(e) {
+                                if (!menu.contains(e.target)) {
+                                        document.body.removeChild(menu);
+                                        document.removeEventListener('click', closeMenu);
+                                }
+                        });
+                }, 100);
+        }
+
+        // Drag and drop functionality
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+                draggedElement = this;
+                this.style.opacity = '0.5';
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+                if (e.preventDefault) {
+                        e.preventDefault();
+                }
+                e.dataTransfer.dropEffect = 'move';
+                return false;
+        }
+
+        function handleDrop(e) {
+                if (e.stopPropagation) {
+                        e.stopPropagation();
+                }
+
+                if (draggedElement !== this && g_pChar && g_pChar.m_olSoftware) {
+                        let draggedIndex = parseInt(draggedElement.dataset.index);
+                        let targetIndex = parseInt(this.dataset.index);
+
+                        // Swap programs in array
+                        let temp = g_pChar.m_olSoftware[draggedIndex];
+                        g_pChar.m_olSoftware[draggedIndex] = g_pChar.m_olSoftware[targetIndex];
+                        g_pChar.m_olSoftware[targetIndex] = temp;
+
+                        // Refresh display
+                        renderCards();
+                }
+
+                return false;
+        }
+
+        function handleDragEnd(e) {
+                this.style.opacity = '1';
         }
 }
 
