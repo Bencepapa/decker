@@ -13343,9 +13343,22 @@ var Anim = {};
                         loadDisplay.style.fontSize = "0.9em";
                         loadDisplay.style.textAlign = "center";
                         
-                        let currentLoad = g_pChar ? g_pChar.calcCurrentLoad() : 0;
-                        let maxLoad = g_pChar ? g_pChar.m_nMemory : 0;
-                        loadDisplay.textContent = `Current Load: ${currentLoad} / ${maxLoad} (${maxLoad > 0 ? Math.round(currentLoad/maxLoad*100) : 0}%)`;
+g_pChar.calcCurrentLoad(); // Calculate and update m_nCurrentLoad
+                        let currentLoad = g_pChar ? g_pChar.m_nCurrentLoad : 0;
+                        let [nLight, nHeavy, maxLoad] = g_pChar ? g_pChar.GetLoadRatings() : [0, 0, 0];
+                        
+                        // Get load status text
+                        let loadStatus = g_pChar ? 
+                            (g_pChar.m_nLoadStatus === LS_LIGHT ? "Light" :
+                             g_pChar.m_nLoadStatus === LS_HEAVY ? "Heavy" : "Average") : "Unknown";
+                        
+                        // Color code the load status
+                        let statusColor = g_pChar ?
+                            (g_pChar.m_nLoadStatus === LS_LIGHT ? "#0f0" :  // Green for Light (+1 bonus)
+                             g_pChar.m_nLoadStatus === LS_HEAVY ? "#f00" :    // Red for Heavy (-1 penalty)
+                             "#ff0") : "#fff";                                  // Yellow for Average
+                        
+                        loadDisplay.innerHTML = `Current Load: ${currentLoad} / ${maxLoad} (${maxLoad > 0 ? Math.round(currentLoad/maxLoad*100) : 0}%) - <span style="color: ${statusColor}; font-weight: bold;">${loadStatus}</span>`;
                         container.appendChild(loadDisplay);
                 }
         }
