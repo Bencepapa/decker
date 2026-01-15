@@ -13629,11 +13629,8 @@ var Anim = {};
         function renameProgram(program, card, nameElement) {
                 if (!g_pChar) return;
                 
-                // Use existing deckname popup for renaming
-                let currentName = (program.m_szName && program.m_szName !== "") ? program.m_szName : GetSoftwareText(program.m_nClass, program.m_nRating);
-                
                 // Open deckname popup with current name
-                Popup.deckname().then((newName) => {
+                Popup.deckname(program.m_szName).then((newName) => {
                         if (newName && newName.trim()) {
                                 // Set the custom name on the program
                                 program.m_szName = newName.trim();
