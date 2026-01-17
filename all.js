@@ -13521,39 +13521,50 @@ Popup.create("homeview", obj).onInit(() => {
 
                 [CHIP_CPU, CHIP_COPROCESSOR, CHIP_ATTACK, CHIP_DEFENSE, CHIP_STEALTH, CHIP_ANALYSIS].forEach(id => {
                         let rating = g_pChar.m_nChip[id];
-
-                        let card = document.createElement("div");
-                        card.className = "hw-card";
-
                         let iconPath = hwIcons[id] || "img_modern/png/processor.png";
                         let name = hwNames[id];
 
-                        card.style.backgroundImage = `url(${iconPath})`;
+                        const hwCard = CardFactory.create('hardware', {
+                                name: name,
+                                rating: rating,
+                                type: id
+                        }, {
+                                onSelect: (data) => {
+                                        // Hardware selection logic if needed
+                                }
+                        });
 
-                        card.innerHTML = `
-                                <div style="position: relative; width: 64px; height: 64px;">
-                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: rgba(255, 255, 255, 1); text-shadow: 0 0 5px #222, 0 0 15px #0f0;">${rating}</div>
-                                </div>
-                                <div style="font-size: 1.5em; color: #ffffffff; margin-top: 32px; text-shadow: 0 0 5px #222, 0 0 10px rgba(0,0,0, 1);">${name}</div>
-                        `;
-                        container.appendChild(card);
+                        const cardElement = hwCard.createElement();
+                        // Apply custom background image
+                        const card = cardElement.querySelector('.card-hardware');
+                        if (card) {
+                                card.style.backgroundImage = `url(${iconPath})`;
+                        }
+                        container.appendChild(cardElement);
                 });
 
                 // Add optional hardware
                 for (let i=0; i<NUM_HW; i++) {
                         if (g_pChar.m_nHardware[i] !== 0) {
                                 let other_hw = GetHardwareString(i, g_pChar.m_nHardware[i]);
-                                let card = document.createElement("div");
-                                card.className = "hw-card";
-                                card.style.backgroundImage = `url(${"img_modern/png/jack-plug.png"})`;
-                                //card.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                                card.innerHTML = `
-                                        <div style="position: relative; width: 64px; height: 64px;">
-                                                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: rgba(255, 255, 255, 1); text-shadow: 0 0 5px #222, 0 0 15px #0f0;">${g_pChar.m_nHardware[i]}</div>
-                                        </div>
-                                        <div style="font-size: 1.0em; color: #ffffffff; margin-top: 32px; text-shadow: 0 0 5px #222, 0 0 10px rgba(0,0,0, 1);">${other_hw}</div>
-                                `;
-                                container.appendChild(card);
+                                
+                                const hwCard = CardFactory.create('hardware', {
+                                        name: other_hw,
+                                        rating: g_pChar.m_nHardware[i],
+                                        type: 'optional'
+                                }, {
+                                        onSelect: (data) => {
+                                                // Optional hardware selection logic
+                                        }
+                                });
+
+                                const cardElement = hwCard.createElement();
+                                // Apply custom background image for optional hardware
+                                const card = cardElement.querySelector('.card-hardware');
+                                if (card) {
+                                        card.style.backgroundImage = `url("img_modern/png/jack-plug.png")`;
+                                }
+                                container.appendChild(cardElement);
                         }
                 }
 
@@ -13586,10 +13597,38 @@ Popup.create("homeview", obj).onInit(() => {
                         programContainer.style.gridGap = "15px";
                         container.appendChild(programContainer);
 
-                        // Render program cards
+                        // Render program cards using new card system
                         (g_pChar.m_olSoftware || []).forEach((program, index) => {
-                                let card = createProgramCard(program, index);
-                                programContainer.appendChild(card);
+                                const progCard = CardFactory.create('program', program, {
+                                        index: index,
+                                        onToggleLoad: (programData, card) => {
+                                                toggleProgramLoad(programData, card.element);
+                                        },
+                                        onToggleDefault: (programData, card) => {
+                                                toggleProgramDefault(programData, card.element);
+                                        },
+                                        onTrash: (programData, card) => {
+                                                trashProgram(programData, card.element);
+                                        },
+                                        onRename: (programData, card) => {
+                                                renameProgram(programData, card.element, card.element.querySelector('.clickable-name'));
+                                        },
+                                        onDragStart: (e, programData, card) => {
+                                                handleDragStart(e);
+                                        },
+                                        onDragOver: (e, programData, card) => {
+                                                handleDragOver(e);
+                                        },
+                                        onDrop: (e, programData, card) => {
+                                                handleDrop(e);
+                                        },
+                                        onDragEnd: (e, programData, card) => {
+                                                handleDragEnd(e);
+                                        }
+                                });
+
+                                const cardElement = progCard.createElement();
+                                programContainer.appendChild(cardElement);
                         });
 
                         // Add current load display
@@ -13652,32 +13691,9 @@ Popup.create("homeview", obj).onInit(() => {
                 }
         }
 
-        function createProgramCard(program, index) {
-                let card = document.createElement("div");
-                card.className = "program-card";
-                card.draggable = true;
-                card.dataset.index = index;
 
-                // Determine if program is loaded (check m_nLoadedRating > 0)
-                let isLoaded = program && program.m_nLoadedRating > 0;
 
-                // Determine if program is default
-                let isDefault = g_pChar.m_pDefAttackProgram === program || 
-                               g_pChar.m_pDefArmorProgram === program || 
-                               g_pChar.m_pDefShieldProgram === program || 
-                               g_pChar.m_pDefHideProgram === program || 
-                               g_pChar.m_pDefReflectProgram === program;
-
-                // Set background color based on load status
-                card.style.backgroundColor = isLoaded ? "#222" : "#555";
-
-                // Add special border for default programs
-                if (isDefault) {
-                        card.style.border = "2px solid #ff0";
-                        card.style.boxShadow = "0 0 10px rgba(255, 255, 0, 0.5)";
-                }
-
-                // Get program icon (using sprite positioning)
+        /*        // Get program icon (using sprite positioning)
                 let iconBg = `url(img/software.png)`;
                 let iconPos = getProgramIconPosition(program.m_nClass);
                 
@@ -13686,7 +13702,7 @@ Popup.create("homeview", obj).onInit(() => {
                 let className = g_szProgramClassName[program.m_nClass];
                 let size = GetProgramSize(program.m_nClass, program.m_nRating);
 
-card.innerHTML = `
+                card.innerHTML = `
                         <div class="program-info-row">
                                 <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 28px; height: 28px; flex-shrink: 0;"></div>
                                 <div class="program-name-large clickable-name">${programName}</div>
@@ -13735,7 +13751,7 @@ card.innerHTML = `
                 });
 
                 return card;
-        }
+        }*/
 
         function getProgramIconPosition(programClass) {
                 // Map program class to sprite position (simplified - you may need to adjust)
@@ -13770,13 +13786,13 @@ card.innerHTML = `
                 return positions[programClass] || "0 0";
         }
 
-        function toggleProgramLoad(program, card) {
+        function toggleProgramLoad(program, cardElement) {
                 if (!g_pChar) return;
                 
                 // Determine if program is currently loaded by checking m_nLoadedRating > 0
                 let isLoaded = program.m_nLoadedRating > 0;
 
-if (isLoaded) {
+                if (isLoaded) {
                         // Unload program
                         program.m_nLoadedRating = 0;
                         program.m_bLoadByDefault = false;
@@ -13802,10 +13818,22 @@ if (isLoaded) {
                         else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
                 }
 
-                // Refresh the card and load display
-                let index = parseInt(card.dataset.index);
-                let newCard = createProgramCard(program, index);
-                card.parentNode.replaceChild(newCard, card);
+                // Find and update the card in the new system
+                const cardWrapper = cardElement.closest('.card-wrapper');
+                if (cardWrapper) {
+                        // Recreate the card with updated data
+                        const programCard = CardFactory.create('program', program, {
+                                onToggleLoad: toggleProgramLoad,
+                                onToggleDefault: toggleProgramDefault,
+                                onTrash: trashProgram
+                        });
+                        
+                        const newCardElement = programCard.createElement();
+                        cardWrapper.replaceWith(newCardElement);
+                        
+                        // Animate the update
+                        newCardElement.querySelector('.card-program')?.animate('highlight', { color: isLoaded ? '#f00' : '#0f0' });
+                }
                 
                 // Update load display
                 if (window.updateProgramLoadDisplay) {
@@ -15497,20 +15525,20 @@ function do_purchase(pItem, callback) {
                 });
         }
         function home_all() {
-g_pChar.PassTime(l_nFullTime, () => {
+        g_pChar.PassTime(l_nFullTime, () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
                         initFunc();
                 });
         }
         function hosp_one() {
-g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
+        g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
                         g_pChar.m_nHealthPhysical++;
                         g_pChar.m_nCredits -= l_nBaseHospCost;
                         initFunc();
                 });
         }
         function hosp_all() {
-g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
+        g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
                         g_pChar.m_nCredits -= l_nFullHospCost;
                         initFunc();
@@ -15590,7 +15618,7 @@ g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                                                         ["span", {textContent:"Modern UI"}],
                                                 ]],
                                         ]],
-["div", [
+                                        ["div", [
                                                 ["label", [
                                                         ["input", {type:"checkbox"}],
                                                         ["span", {textContent:"Modern Matrix"}],
@@ -15619,7 +15647,7 @@ g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                 Popup.alert("This fixes a bug in the original code, that caused less enemies to spawn.\nApplies only to newly generated Systems.");
         }
 
-let inputs = [...obj.getElementsByTagName("input")];
+        let inputs = [...obj.getElementsByTagName("input")];
         inputs[0].onchange = () => { g_pChar.m_bTooltips = inputs[0].checked; };
         inputs[1].onchange = () => { Config.difficulty = inputs[1].checked; };
         inputs[2].onchange = () => { Config.mute = !inputs[2].checked; };
@@ -15654,7 +15682,7 @@ let inputs = [...obj.getElementsByTagName("input")];
                         buttons[0].disabled = false;
                         buttons[1].disabled = false;
                 }
-inputs[0].checked = g_pChar.m_bTooltips;
+                inputs[0].checked = g_pChar.m_bTooltips;
                 inputs[1].checked = Config.difficulty;
                 inputs[2].checked = !Config.mute;
                 inputs[3].checked = Config.viewice;

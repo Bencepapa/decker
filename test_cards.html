@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card System Testing Framework</title>
+    <link rel="stylesheet" href="cards.css">
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .test-header {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .test-section {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-title {
+            color: #0f0;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .test-btn {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #0ff;
+            border-radius: 4px;
+            color: #0ff;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #fff;
+            color: #fff;
+        }
+        
+        .test-btn.danger {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #f00;
+            color: #f00;
+        }
+        
+        .test-btn.danger:hover {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff6666;
+            color: #ff6666;
+        }
+        
+        .test-output {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        
+        .log-entry.info {
+            color: #0ff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .log-entry.success {
+            color: #0f0;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .log-entry.warning {
+            color: #ff0;
+            background: rgba(255, 255, 0, 0.1);
+        }
+        
+        .log-entry.error {
+            color: #f00;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0f0;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🎴 Card System Testing Framework</h1>
+        <p>Comprehensive testing for the modern card system implementation</p>
+    </div>
+
+    <!-- Factory Tests -->
+    <div class="test-section">
+        <h2 class="test-title">🏭 Factory Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testFactoryRegistration()">Test Registration</button>
+            <button class="test-btn" onclick="testFactoryCreation()">Test Card Creation</button>
+            <button class="test-btn" onclick="testFactoryBatch()">Test Batch Creation</button>
+            <button class="test-btn" onclick="testInvalidTypes()">Test Invalid Types</button>
+        </div>
+        <div id="factory-output" class="test-output"></div>
+    </div>
+
+    <!-- Hardware Card Tests -->
+    <div class="test-section">
+        <h2 class="test-title">💾 Hardware Card Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testHardwareCardCreation()">Create Hardware Card</button>
+            <button class="test-btn" onclick="testHardwareCardInteractions()">Test Interactions</button>
+            <button class="test-btn" onclick="testHardwareCardAnimations()">Test Animations</button>
+        </div>
+        <div id="hardware-cards" class="card-container"></div>
+        <div id="hardware-output" class="test-output"></div>
+    </div>
+
+    <!-- Program Card Tests -->
+    <div class="test-section">
+        <h2 class="test-title">⚙️ Program Card Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testProgramCardCreation()">Create Program Cards</button>
+            <button class="test-btn" onclick="testProgramCardStates()">Test State Changes</button>
+            <button class="test-btn" onclick="testProgramCardAnimations()">Test Animations</button>
+            <button class="test-btn" onclick="testProgramCardDragDrop()">Test Drag & Drop</button>
+        </div>
+        <div id="program-cards" class="card-container"></div>
+        <div id="program-output" class="test-output"></div>
+    </div>
+
+    <!-- Shop Card Tests -->
+    <div class="test-section">
+        <h2 class="test-title">🛒 Shop Card Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testShopCardCreation()">Create Shop Cards</button>
+            <button class="test-btn" onclick="testShopCardAffordability()">Test Affordability</button>
+            <button class="test-btn" onclick="testShopCardPurchases()">Test Purchases</button>
+        </div>
+        <div id="shop-cards" class="card-container"></div>
+        <div id="shop-output" class="test-output"></div>
+    </div>
+
+    <!-- Contract Card Tests -->
+    <div class="test-section">
+        <h2 class="test-title">📋 Contract Card Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testContractCardCreation()">Create Contract Cards</button>
+            <button class="test-btn" onclick="testContractCardAcceptance()">Test Acceptance</button>
+            <button class="test-btn" onclick="testContractCardViewing()">Test Viewing</button>
+        </div>
+        <div id="contract-cards" class="card-container vertical"></div>
+        <div id="contract-output" class="test-output"></div>
+    </div>
+
+    <!-- Future Cards Tests -->
+    <div class="test-section">
+        <h2 class="test-title">🔮 Future Card Tests (Character & Projects)</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testCharacterStatCards()">Test Character Stats</button>
+            <button class="test-btn" onclick="testProjectCards()">Test Project Cards</button>
+        </div>
+        <div id="future-cards" class="card-container"></div>
+        <div id="future-output" class="test-output"></div>
+    </div>
+
+    <!-- Performance Tests -->
+    <div class="test-section">
+        <h2 class="test-title">⚡ Performance Tests</h2>
+        <div class="test-controls">
+            <button class="test-btn" onclick="testBatchPerformance()">Test Batch Performance</button>
+            <button class="test-btn" onclick="testAnimationPerformance()">Test Animation Performance</button>
+            <button class="test-btn" onclick="testMemoryUsage()">Test Memory Usage</button>
+            <button class="test-btn danger" onclick="clearPerformanceTests()">Clear Tests</button>
+        </div>
+        <div class="performance-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="cards-created">0</div>
+                <div class="stat-label">Cards Created</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-render-time">0ms</div>
+                <div class="stat-label">Avg Render Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="animations-run">0</div>
+                <div class="stat-label">Animations Run</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="memory-usage">0MB</div>
+                <div class="stat-label">Memory Usage</div>
+            </div>
+        </div>
+        <div id="performance-cards" class="card-container dense"></div>
+        <div id="performance-output" class="test-output"></div>
+    </div>
+
+    <!-- Mock Game Data (simplified for testing) -->
+    <script src="cards.js"></script>
+    <script>
+        // Mock global variables and functions
+        window.g_szProgramClassName = [
+            'Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence', 
+            'Confuse', 'Weaken', 'Shield', 'Smoke', 'Decoy', 'Medic', 
+            'Armor', 'Hide', 'Deceive', 'Relocate'
+        ];
+        
+        window.GetSoftwareText = (cls, rating) => {
+            const names = ['Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence'];
+            return `${names[cls] || 'Unknown'} ${rating}`;
+        };
+        
+        window.GetProgramSize = (cls, rating) => {
+            return Math.floor((cls + 1) * (rating || 1) * 1.5);
+        };
+        
+        window.g_pChar = {
+            m_pDefAttackProgram: null,
+            m_pDefArmorProgram: null,
+            m_pDefShieldProgram: null,
+            m_pDefHideProgram: null,
+            m_pDefReflectProgram: null
+        };
+
+        // Test Framework
+        class TestFramework {
+            constructor() {
+                this.stats = {
+                    cardsCreated: 0,
+                    totalRenderTime: 0,
+                    animationsRun: 0,
+                    memoryUsage: 0
+                };
+                this.logs = [];
+            }
+            
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = `[${timestamp}] ${message}`;
+                this.logs.push({ message: entry, type });
+                
+                const outputElement = event.target?.closest('.test-section')?.querySelector('.test-output');
+                if (outputElement) {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry ${type}`;
+                    logEntry.textContent = entry;
+                    outputElement.appendChild(logEntry);
+                    outputElement.scrollTop = outputElement.scrollHeight;
+                }
+                
+                console.log(`[${type.toUpperCase()}] ${entry}`);
+            }
+            
+            updateStats() {
+                document.getElementById('cards-created').textContent = this.stats.cardsCreated;
+                document.getElementById('avg-render-time').textContent = 
+                    this.stats.cardsCreated > 0 ? 
+                    `${(this.stats.totalRenderTime / this.stats.cardsCreated).toFixed(2)}ms` : '0ms';
+                document.getElementById('animations-run').textContent = this.stats.animationsRun;
+                
+                if (performance.memory) {
+                    this.stats.memoryUsage = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                    document.getElementById('memory-usage').textContent = `${this.stats.memoryUsage}MB`;
+                }
+            }
+            
+            measurePerformance(testName, testFunction) {
+                const startTime = performance.now();
+                const startMemory = performance.memory?.usedJSHeapSize || 0;
+                
+                const result = testFunction();
+                
+                const endTime = performance.now();
+                const endMemory = performance.memory?.usedJSHeapSize || 0;
+                
+                const renderTime = endTime - startTime;
+                const memoryDelta = (endMemory - startMemory) / 1024 / 1024;
+                
+                this.stats.totalRenderTime += renderTime;
+                this.updateStats();
+                
+                this.log(`${testName}: ${renderTime.toFixed(2)}ms, Memory: ${memoryDelta.toFixed(2)}MB`, 'info');
+                
+                return result;
+            }
+        }
+
+        const testFramework = new TestFramework();
+
+        // Factory Tests
+        function testFactoryRegistration() {
+            testFramework.log('Testing factory registration...', 'info');
+            
+            const types = CardFactory.getRegisteredTypes();
+            testFramework.log(`Registered types: ${types.join(', ')}`, 'success');
+            
+            const isHardwareRegistered = CardFactory.isRegistered('hardware');
+            testFramework.log(`Hardware registered: ${isHardwareRegistered}`, isHardwareRegistered ? 'success' : 'error');
+            
+            const isInvalidRegistered = CardFactory.isRegistered('invalid');
+            testFramework.log(`Invalid type registered: ${isInvalidRegistered}`, !isInvalidRegistered ? 'success' : 'error');
+        }
+
+        function testFactoryCreation() {
+            testFramework.measurePerformance('Factory Creation', () => {
+                try {
+                    const hwCard = CardFactory.create('hardware', { name: 'Test CPU', rating: 5, type: 'CPU' });
+                    testFramework.log('Hardware card created successfully', 'success');
+                    
+                    const progCard = CardFactory.create('program', { m_nClass: 0, m_nRating: 3, m_nLoadedRating: 0 });
+                    testFramework.log('Program card created successfully', 'success');
+                    
+                    testFramework.stats.cardsCreated += 2;
+                } catch (error) {
+                    testFramework.log(`Factory creation error: ${error.message}`, 'error');
+                }
+            });
+        }
+
+        function testFactoryBatch() {
+            testFramework.measurePerformance('Batch Creation', () => {
+                const hardwareData = [
+                    { name: 'CPU 1', rating: 1, type: 'CPU' },
+                    { name: 'CPU 2', rating: 2, type: 'CPU' },
+                    { name: 'CPU 3', rating: 3, type: 'CPU' }
+                ];
+                
+                const cards = CardFactory.createBatch('hardware', hardwareData);
+                testFramework.log(`Created ${cards.length} hardware cards in batch`, 'success');
+                testFramework.stats.cardsCreated += cards.length;
+                
+                return cards;
+            });
+        }
+
+        function testInvalidTypes() {
+            try {
+                CardFactory.create('invalid-type', {});
+                testFramework.log('Should have thrown error for invalid type', 'error');
+            } catch (error) {
+                testFramework.log(`Correctly caught error: ${error.message}`, 'success');
+            }
+        }
+
+        // Hardware Card Tests
+        function testHardwareCardCreation() {
+            const container = document.getElementById('hardware-cards');
+            container.innerHTML = '';
+            
+            const hardwareData = [
+                { name: 'CPU', rating: 5, type: 'CPU' },
+                { name: 'Coprocessor', rating: 3, type: 'Coprocessor' },
+                { name: 'Attack FW', rating: 4, type: 'Attack FW' },
+                { name: 'Defense FW', rating: 2, type: 'Defense FW' }
+            ];
+            
+            testFramework.measurePerformance('Hardware Card Creation', () => {
+                const cards = CardFactory.createBatch('hardware', hardwareData, {
+                    onSelect: (data, card) => {
+                        testFramework.log(`Selected hardware: ${data.name}`, 'info');
+                        card.animate('highlight', { color: '#0f0' });
+                    }
+                });
+                
+                cards.forEach(card => {
+                    const cardElement = card.createElement();
+                    container.appendChild(cardElement);
+                });
+                
+                testFramework.stats.cardsCreated += cards.length;
+                return cards;
+            });
+        }
+
+        function testHardwareCardInteractions() {
+            testFramework.log('Click on hardware cards to test interactions', 'info');
+        }
+
+        function testHardwareCardAnimations() {
+            const container = document.getElementById('hardware-cards');
+            const cards = container.querySelectorAll('.card-hardware');
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    const animations = ['highlight', 'pulse', 'shake'];
+                    const randomAnimation = animations[index % animations.length];
+                    card.animate(randomAnimation, { color: `hsl(${index * 60}, 100%, 50%)` });
+                    testFramework.stats.animationsRun++;
+                }, index * 200);
+            });
+        }
+
+        // Program Card Tests
+        function testProgramCardCreation() {
+            const container = document.getElementById('program-cards');
+            container.innerHTML = '';
+            
+            const programData = [
+                { m_nClass: 0, m_nRating: 3, m_nLoadedRating: 3, m_szName: 'Custom Attack' },
+                { m_nClass: 8, m_nRating: 2, m_nLoadedRating: 0, m_szName: '' },
+                { m_nClass: 12, m_nRating: 4, m_nLoadedRating: 4, m_szName: 'Mega Shield' },
+                { m_nClass: 9, m_nRating: 1, m_nLoadedRating: 0, m_szName: '' }
+            ];
+            
+            testFramework.measurePerformance('Program Card Creation', () => {
+                const cards = CardFactory.createBatch('program', programData, {
+                    index: 0,
+                    onToggleLoad: (data, card) => {
+                        data.m_nLoadedRating = data.m_nLoadedRating > 0 ? 0 : data.m_nRating;
+                        card.update(data);
+                        testFramework.log(`Toggled load for: ${card.getProgramName ? card.getProgramName(data) : 'program'}`, 'info');
+                    },
+                    onRename: (data, card) => {
+                        testFramework.log(`Rename requested for program`, 'info');
+                    },
+                    onTrash: (data, card) => {
+                        testFramework.log(`Trash requested for program`, 'warning');
+                    }
+                });
+                
+                cards.forEach(card => {
+                    const cardElement = card.createElement();
+                    container.appendChild(cardElement);
+                });
+                
+                testFramework.stats.cardsCreated += cards.length;
+                return cards;
+            });
+        }
+
+        function testProgramCardStates() {
+            testFramework.log('Click Load/Unload buttons to test state changes', 'info');
+            testFramework.log('Click program names to test rename functionality', 'info');
+        }
+
+        function testProgramCardAnimations() {
+            const container = document.getElementById('program-cards');
+            const cards = container.querySelectorAll('.card-program');
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.animate('bounceIn');
+                    testFramework.stats.animationsRun++;
+                }, index * 150);
+            });
+        }
+
+        function testProgramCardDragDrop() {
+            testFramework.log('Drag and drop program cards to test drag functionality', 'info');
+        }
+
+        // Shop Card Tests
+        function testShopCardCreation() {
+            const container = document.getElementById('shop-cards');
+            container.innerHTML = '';
+            
+            const shopData = [
+                { item: { name: 'Attack Software', type: 'software' }, currentLevel: 2, price: 500, canAfford: true },
+                { item: { name: 'Shield Software', type: 'software' }, currentLevel: 0, price: 1200, canAfford: false },
+                { item: { name: 'CPU Upgrade', type: 'hardware' }, currentLevel: 1, price: 3000, canAfford: true },
+                { item: { name: 'Encryption Chip', type: 'chip' }, currentLevel: 0, price: 800, canAfford: true }
+            ];
+            
+            testFramework.measurePerformance('Shop Card Creation', () => {
+                const cards = CardFactory.createBatch('shop', shopData, {
+                    onBuy: (data, card) => {
+                        testFramework.log(`Purchase attempted: ${data.item.name}`, 'info');
+                    }
+                });
+                
+                cards.forEach(card => {
+                    const cardElement = card.createElement();
+                    container.appendChild(cardElement);
+                });
+                
+                testFramework.stats.cardsCreated += cards.length;
+                return cards;
+            });
+        }
+
+        function testShopCardAffordability() {
+            testFramework.log('Green items are affordable, red items are too expensive', 'info');
+        }
+
+        function testShopCardPurchases() {
+            testFramework.log('Click Buy buttons to test purchase functionality', 'info');
+        }
+
+        // Contract Card Tests
+        function testContractCardCreation() {
+            const container = document.getElementById('contract-cards');
+            container.innerHTML = '';
+            
+            const contractData = [
+                { type: 'Data Theft', pay: 1500, target: 'MegaCorp Systems', difficulty: 45, daysLeft: 3 },
+                { type: 'Sabotage', pay: 2200, target: 'NeoTech', difficulty: 65, daysLeft: 5 },
+                { type: 'Espionage', pay: 3000, target: 'DarkNet HQ', difficulty: 80, daysLeft: 7 }
+            ];
+            
+            testFramework.measurePerformance('Contract Card Creation', () => {
+                const cards = CardFactory.createBatch('contract', contractData, {
+                    onAccept: (data, card) => {
+                        testFramework.log(`Contract accepted: ${data.type}`, 'success');
+                    },
+                    onView: (data, card) => {
+                        testFramework.log(`Contract viewed: ${data.type}`, 'info');
+                    }
+                });
+                
+                cards.forEach(card => {
+                    const cardElement = card.createElement();
+                    container.appendChild(cardElement);
+                });
+                
+                testFramework.stats.cardsCreated += cards.length;
+                return cards;
+            });
+        }
+
+        function testContractCardAcceptance() {
+            testFramework.log('Click Accept buttons to test contract acceptance', 'info');
+        }
+
+        function testContractCardViewing() {
+            testFramework.log('Click on card body to view contract details', 'info');
+        }
+
+        // Future Cards Tests
+        function testCharacterStatCards() {
+            const container = document.getElementById('future-cards');
+            container.innerHTML = '';
+            
+            const statData = [
+                { name: 'Health', value: 85, max: 100, color: 'linear-gradient(90deg, #f00, #ff0)' },
+                { name: 'Skills', value: 12, max: 20, color: 'linear-gradient(90deg, #0f0, #0ff)' },
+                { name: 'Experience', value: 750, max: 1000, color: 'linear-gradient(90deg, #80f, #f0f)' },
+                { name: 'Reputation', value: 45, max: 100, color: 'linear-gradient(90deg, #ff0, #f80)' }
+            ];
+            
+            const cards = CardFactory.createBatch('character-stat', statData);
+            cards.forEach(card => {
+                const cardElement = card.createElement();
+                container.appendChild(cardElement);
+            });
+            
+            testFramework.stats.cardsCreated += cards.length;
+            testFramework.log('Character stat cards created', 'success');
+        }
+
+        function testProjectCards() {
+            const container = document.getElementById('future-cards');
+            
+            const projectData = [
+                { name: 'AI Program', type: 'Software', daysLeft: 5, progress: 60 },
+                { name: 'Quantum Chip', type: 'Hardware', daysLeft: 12, progress: 25 },
+                { name: 'Neural Interface', type: 'Cyberware', daysLeft: 8, progress: 80 }
+            ];
+            
+            const cards = CardFactory.createBatch('project', projectData, {
+                onWork: (data, card) => {
+                    data.progress = Math.min(100, data.progress + 5);
+                    data.daysLeft = Math.max(0, data.daysLeft - 1);
+                    card.update(data);
+                    testFramework.log(`Worked on: ${data.name}`, 'info');
+                },
+                onFinish: (data, card) => {
+                    testFramework.log(`Finished: ${data.name}`, 'success');
+                }
+            });
+            
+            cards.forEach(card => {
+                const cardElement = card.createElement();
+                container.appendChild(cardElement);
+            });
+            
+            testFramework.stats.cardsCreated += cards.length;
+            testFramework.log('Project cards created', 'success');
+        }
+
+        // Performance Tests
+        function testBatchPerformance() {
+            const container = document.getElementById('performance-cards');
+            container.innerHTML = '';
+            
+            const batchSize = 100;
+            const hardwareData = Array.from({ length: batchSize }, (_, i) => ({
+                name: `CPU ${i + 1}`,
+                rating: (i % 6) + 1,
+                type: 'CPU'
+            }));
+            
+            testFramework.measurePerformance(`Batch Creation (${batchSize} cards)`, () => {
+                const cards = CardFactory.createBatch('hardware', hardwareData);
+                
+                cards.forEach(card => {
+                    const cardElement = card.createElement();
+                    container.appendChild(cardElement);
+                });
+                
+                testFramework.stats.cardsCreated += cards.length;
+                return cards;
+            });
+        }
+
+        function testAnimationPerformance() {
+            const container = document.getElementById('performance-cards');
+            const cards = container.querySelectorAll('.card-hardware');
+            
+            testFramework.log(`Running animations on ${cards.length} cards...`, 'info');
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.animate('pulse', { iterations: 1 });
+                    testFramework.stats.animationsRun++;
+                }, index * 10);
+            });
+        }
+
+        function testMemoryUsage() {
+            testFramework.updateStats();
+            
+            if (performance.memory) {
+                const memory = performance.memory;
+                testFramework.log(`Memory Usage: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`, 'info');
+                testFramework.log(`Total Heap: ${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)}MB`, 'info');
+                testFramework.log(`Heap Limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)}MB`, 'info');
+            } else {
+                testFramework.log('Memory API not available in this browser', 'warning');
+            }
+        }
+
+        function clearPerformanceTests() {
+            document.getElementById('performance-cards').innerHTML = '';
+            testFramework.stats = { cardsCreated: 0, totalRenderTime: 0, animationsRun: 0, memoryUsage: 0 };
+            testFramework.updateStats();
+            testFramework.log('Performance tests cleared', 'info');
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            testFramework.log('Card System Testing Framework loaded', 'success');
+            testFramework.log('Run individual tests to validate card functionality', 'info');
+        });
+    </script>
+</body>
+</html>
