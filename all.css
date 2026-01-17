@@ -658,6 +658,50 @@ button:hover:not(:disabled) {
     transform: scale(0.95);
 }
 
+/* Modern program card layout classes */
+.program-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.program-name-large {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    text-decoration: underline;
+    flex: 1;
+}
+
+.program-meta {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    font-size: 0.8em;
+    margin-bottom: 6px;
+}
+
+.program-type {
+    color: #0ff;
+}
+
+.program-rating {
+    color: #ff0;
+}
+
+.program-size {
+    color: #888;
+}
+
+.program-actions-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
 .program-menu {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }

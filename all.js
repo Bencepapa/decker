@@ -13686,16 +13686,20 @@ Popup.create("homeview", obj).onInit(() => {
                 let className = g_szProgramClassName[program.m_nClass];
                 let size = GetProgramSize(program.m_nClass, program.m_nRating);
 
-                card.innerHTML = `
-                        <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 40px; height: 40px; margin: 0 auto 8px;"></div>
-                        <div class="program-name clickable-name" style="font-size: 0.8em; font-weight: bold; color: #fff; margin-bottom: 4px; text-align: center; cursor: pointer; text-decoration: underline;">${programName}</div>
-                        <div class="program-class" style="font-size: 0.7em; color: #0ff; margin-bottom: 2px; text-align: center;">${className}</div>
-                        <div class="program-rating" style="font-size: 0.7em; color: #ff0; margin-bottom: 2px; text-align: center;">Rating: ${program.m_nRating}</div>
-                        <div class="program-size" style="font-size: 0.7em; color: #888; text-align: center;">Size: ${size}</div>
-                        <div class="program-actions" style="margin-top: 8px; display: flex; gap: 4px; justify-content: center;">
-                                <button class="prog-btn load-btn" style="font-size: 0.6em; padding: 2px 6px;">${isLoaded ? "Unload" : "Load"}</button>
-                                <button class="prog-btn default-btn" style="font-size: 0.6em; padding: 2px 6px;">${isDefault ? "Undefault" : "Default"}</button>
-                                <button class="prog-btn trash-btn" style="font-size: 0.6em; padding: 2px 6px; background: rgba(255, 0, 0, 0.2); border-color: #f00; color: #f00;">Trash</button>
+card.innerHTML = `
+                        <div class="program-info-row">
+                                <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 32px; height: 32px; flex-shrink: 0;"></div>
+                                <div class="program-name-large clickable-name">${programName}</div>
+                        </div>
+                        <div class="program-meta">
+                                <span class="program-type">${className}</span>
+                                <span class="program-rating">${program.m_nRating}</span>
+                                <span class="program-size">${size}</span>
+                        </div>
+                        <div class="program-actions-row">
+                                <button class="prog-btn load-btn" style="font-size: 0.7em; padding: 3px 8px;">${isLoaded ? "Unload" : "Load"}</button>
+                                <button class="prog-btn default-btn" style="font-size: 0.7em; padding: 3px 8px;">${isDefault ? "Undefault" : "Default"}</button>
+                                <button class="prog-btn trash-btn" style="font-size: 0.7em; padding: 3px 8px; background: rgba(255, 0, 0, 0.2); border-color: #f00; color: #f00;">Trash</button>
                         </div>
                 `;
 
@@ -13773,9 +13777,10 @@ Popup.create("homeview", obj).onInit(() => {
                 // Determine if program is currently loaded by checking m_nLoadedRating > 0
                 let isLoaded = program.m_nLoadedRating > 0;
 
-                if (isLoaded) {
+if (isLoaded) {
                         // Unload program
                         program.m_nLoadedRating = 0;
+                        program.m_bLoadByDefault = false;
                         
                         // Clear active program references
                         if (g_pChar.m_pActiveArmor === program) g_pChar.m_pActiveArmor = null;
@@ -13787,6 +13792,7 @@ Popup.create("homeview", obj).onInit(() => {
                 } else {
                         // Load program
                         program.m_nLoadedRating = program.m_nRating;
+                        program.m_bLoadByDefault = true;
                         
                         // Set active program references for the appropriate types
                         if (program.m_nClass === PROGRAM_ARMOR) g_pChar.m_pActiveArmor = program;
