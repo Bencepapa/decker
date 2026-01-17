@@ -1120,6 +1120,10 @@ Popup.prototype.onInit = function(f) {
         this.initFunc = f;
         return this;
 }
+Popup.prototype.onShow = function(f) {
+        this.showFunc = f;
+        return this;
+}
 Popup.prototype.onKey = function(binds) {
         for (let key in binds) {
                 if (binds.hasOwnProperty(key))
@@ -1175,6 +1179,16 @@ Popup.close = function(val) {
         let active = Popup.activeList.pop();
         if (active && active.callback)
                 active.callback(val);
+        
+        // Call onShow for the new topmost popup if it exists
+        if (Popup.activeList.length > 0) {
+                let newTopmost = Popup.activeList[Popup.activeList.length - 1];
+                let popup = Popup.popupList[newTopmost.name];
+                if (popup && popup.showFunc) {
+                        console.log(`Popup.onShow: ${newTopmost.name} is now topmost, calling showFunc`);
+                        popup.showFunc();
+                }
+        }
 }
 
 Popup.closeAll = function() {
@@ -2357,15 +2371,58 @@ function canAffordRent() {
         return g_pChar.m_nCredits >= g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle];
 }
 
-// Warning strip rendering function
-function renderWarningStrip(container) {
-        const warnings = detectWarnings();
-        console.log('renderWarningStrip called, warnings found:', warnings.length);
-        if (warnings.length === 0) return;
+// Global state to track currently displayed warnings
+window.currentWarnings = [];
+window.currentWarningsUngrouped = [];
+
+// Helper function to create a single warning item
+function createWarningItem(warning) {
+        const warningItem = document.createElement("div");
+        warningItem.className = `warning-item warning-${warning.severity}`;
+        warningItem.textContent = warning.message;
+        warningItem.style.cursor = "pointer";
         
-        // Group warnings by type and keep highest severity for same type
+        warningItem.addEventListener('click', () => {
+                // Open target popup based on warning type (same as home screen buttons)
+                switch(warning.target) {
+                        case 'rest':
+                                Popup.rest();
+                                break;
+                        case 'character':
+                                if (Config.m_bModernUI) {
+                                        Popup.modern_charview();
+                                } else {
+                                        Popup.charview();
+                                }
+                                break;
+                        default:
+                                if (Config.m_bModernUI) {
+                                        Popup.modern_charview();
+                                } else {
+                                        Popup.charview();
+                                }
+                }
+        });
+        
+        return warningItem;
+}
+
+// Enhanced warning strip rendering function with animation support
+function renderWarningStripWithAnimation(container) {
+        const newWarnings = detectWarnings();
+        
+        // Use ungrouped warnings for comparison to detect all new warnings
+        const previousUngroupedWarnings = window.currentWarningsUngrouped || [];
+        const newWarningItems = newWarnings.filter(warning => 
+                !previousUngroupedWarnings.some(existing => 
+                        existing.type === warning.type && 
+                        existing.severity === warning.severity
+                )
+        );
+        
+        // Group warnings by type and keep highest severity for same type (for display only)
         const warningMap = new Map();
-        warnings.forEach(warning => {
+        newWarnings.forEach(warning => {
                 const existing = warningMap.get(warning.type);
                 if (!existing || getSeverityLevel(existing.severity) < getSeverityLevel(warning.severity)) {
                         warningMap.set(warning.type, warning);
@@ -2373,38 +2430,41 @@ function renderWarningStrip(container) {
         });
         
         const uniqueWarnings = Array.from(warningMap.values());
-        if (uniqueWarnings.length === 0) return;
         
+        // Update global state - store both ungrouped and grouped versions
+        window.currentWarningsUngrouped = newWarnings;
+        window.currentWarnings = uniqueWarnings;
+        
+        console.log(`Warning update: Detected ${newWarnings.length} warnings, ${newWarningItems.length} are new, showing ${uniqueWarnings.length} unique`);
+        console.log('New warning items:', newWarningItems);
+        
+        if (uniqueWarnings.length === 0) {
+                // Remove existing warning strip if no warnings
+                const oldStrip = container.querySelector(".warning-strip");
+                if (oldStrip) oldStrip.remove();
+                return;
+        }
+        
+        // Remove old warning strip
+        const oldStrip = container.querySelector(".warning-strip");
+        if (oldStrip) oldStrip.remove();
+        
+        // Create new warning strip
         const warningStrip = document.createElement("div");
         warningStrip.className = "warning-strip";
         
+        // Add warnings with animation classes for new items
         uniqueWarnings.forEach(warning => {
-                const warningItem = document.createElement("div");
-                warningItem.className = `warning-item warning-${warning.severity}`;
-                warningItem.textContent = warning.message;
-                warningItem.style.cursor = "pointer";
+                const warningItem = createWarningItem(warning);
                 
-                warningItem.addEventListener('click', () => {
-                        // Open target popup based on warning type (same as home screen buttons)
-                        switch(warning.target) {
-                                case 'rest':
-                                        Popup.rest();
-                                        break;
-                                case 'character':
-                                        if (Config.m_bModernUI) {
-                                                Popup.modern_charview();
-                                        } else {
-                                                Popup.charview();
-                                        }
-                                        break;
-                                default:
-                                        if (Config.m_bModernUI) {
-                                                Popup.modern_charview();
-                                        } else {
-                                                Popup.charview();
-                                        }
-                        }
-                });
+                // Check if this is a new warning
+                const isNew = newWarningItems.some(newW => 
+                        newW.type === warning.type && newW.severity === warning.severity
+                );
+                
+                if (isNew) {
+                        warningItem.classList.add("warning-item-new");
+                }
                 
                 warningStrip.appendChild(warningItem);
         });
@@ -2417,6 +2477,8 @@ function renderWarningStrip(container) {
         }
 }
 
+
+
 // Helper function to compare severity levels
 function getSeverityLevel(severity) {
         switch(severity) {
@@ -2427,24 +2489,7 @@ function getSeverityLevel(severity) {
         }
 }
 
-// Function to update warning strip on home screen if it's currently visible
-function updateHomeScreenWarnings() {
-        // Check if home screen popup is currently visible
-        const homeviewPopup = document.getElementById("popup_homeview");
-        console.log("updateHomeScreenWarnings called");
-        if (homeviewPopup && homeviewPopup.style.display !== "none") {
-                const container = document.getElementById("homeview-container");
-                console.log("Home screen popup is visible, updating warnings");
-                if (container) {
-                        // Remove existing warning strips
-                        const existingStrips = container.querySelectorAll(".warning-strip");
-                        existingStrips.forEach(strip => strip.remove());
-                        
-                        // Add updated warning strip
-                        renderWarningStrip(container);
-                }
-        }
-}
+
 
 
 
@@ -3565,7 +3610,6 @@ function Character() {
 
         // Current health
         this.m_nHealthPhysical = MAX_HEALTH;
-        updateHomeScreenWarnings();
         this.m_nHealthMental = 0;
         this.m_nHealthDeck = 0;
 
@@ -9586,7 +9630,6 @@ function DoDumpDecker(nCause) {
                                 // Saved by autodump
                                 szTxt = "You have been saved by your BioMonitor's AutoDump.";
                                 g_pChar.m_nHealthPhysical = 1;
-        updateHomeScreenWarnings();
                         } else {
                                 // Death!
                                 Popup.alert("You have died!\n(Does anyone smell grey matter burning?)").then(() => {
@@ -9790,9 +9833,7 @@ function DoDumpDecker_3(nCause) {
 
         // Update the character information
         g_pChar.m_nSkillPoints += nSkillPoints;
-        updateHomeScreenWarnings();
         g_pChar.m_nCredits += nTotal;
-        updateHomeScreenWarnings();
 
         // Fill in the dialog
         let dlgResult = {};
@@ -10110,7 +10151,6 @@ function DoEndPlayerTurn() {
         if (g_pChar.m_nHealthMental < 1) {
                 // Modify physical health
                 g_pChar.m_nHealthPhysical += g_pChar.m_nHealthMental;
-        updateHomeScreenWarnings();
                 MV.UpdateBar(BAR_LETHAL);
 
                 // Dump the decker
@@ -10128,7 +10168,6 @@ function DoEndPlayerTurn() {
         if (g_pChar.m_nHealthDeck < 1) {
                 // Extra deck damage becomes physical damage
                 g_pChar.m_nHealthPhysical += g_pChar.m_nHealthDeck;
-        updateHomeScreenWarnings();
                 MV.UpdateBar(BAR_LETHAL);
 
                 // Dump the decker
@@ -12706,10 +12745,12 @@ let [obj] = HTMLbuilder(
         Popup.onclick( buttons[7], view_options );
 
 Popup.create("homeview", obj).onInit(() => {
-                // Add warning strip on initialization
+                // Initial setup - only runs once when popup is first created
+        }).onShow(() => {
+                // Update warning strip with animations each time home screen becomes visible
                 const container = document.getElementById("homeview-container");
                 if (container) {
-                        renderWarningStrip(container);
+                        renderWarningStripWithAnimation(container);
                 }
         });
 
@@ -12973,7 +13014,6 @@ Popup.create("homeview", obj).onInit(() => {
 
         function upgrade_attack() {
                 g_pChar.m_nSkillPoints -= g_pChar.m_nAttackSkill;
-        updateHomeScreenWarnings();
                 g_pChar.m_nAttackSkill++;
                 initFunc();
         }
@@ -14109,8 +14149,7 @@ function do_purchase(pItem, callback) {
 
                         function soft_purchase() {
                                 // Get the money
-g_pChar.m_nCredits -= pItem.m_nPrice;
-                                updateHomeScreenWarnings();
+                                g_pChar.m_nCredits -= pItem.m_nPrice;
 
                                 // Buy the program
                                 let pProgram = Program.create(pItem.m_nSubType, pItem.m_nRating);
@@ -15455,14 +15494,12 @@ g_pChar.m_nCredits -= pItem.m_nPrice;
         function home_all() {
 g_pChar.PassTime(l_nFullTime, () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
-                        updateHomeScreenWarnings();
                         initFunc();
                 });
         }
         function hosp_one() {
 g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
                         g_pChar.m_nHealthPhysical++;
-                        updateHomeScreenWarnings();
                         g_pChar.m_nCredits -= l_nBaseHospCost;
                         initFunc();
                 });
@@ -15470,7 +15507,6 @@ g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
         function hosp_all() {
 g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
-                        updateHomeScreenWarnings();
                         g_pChar.m_nCredits -= l_nFullHospCost;
                         initFunc();
                 });

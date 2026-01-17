@@ -717,3 +717,24 @@ button:hover:not(:disabled) {
     font-size: 1.1em;
 }
 
+/* Warning animations */
+.warning-item-new {
+    animation: slideInFromTop 0.3s ease-out;
+    transform-origin: top;
+}
+
+@keyframes slideInFromTop {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scaleY(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-2px) scaleY(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
+}
+
