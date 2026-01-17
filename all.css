@@ -667,3 +667,53 @@ button:hover:not(:disabled) {
     color: #0ff;
 }
 
+/* Warning Strip Component */
+.warning-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.warning-item {
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid;
+}
+
+.warning-notice {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: #0f0;
+    color: #0f0;
+}
+
+.warning-warning {
+    background: rgba(255, 255, 0, 0.1);
+    border-color: #ff0;
+    color: #ff0;
+}
+
+.warning-critical {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: #f00;
+    color: #f00;
+}
+
+.warning-item:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Test warning strip - should always show */
+.warning-strip .warning-item {
+    border: 2px solid;
+    font-size: 1.1em;
+}
+

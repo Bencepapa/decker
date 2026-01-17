@@ -2249,6 +2249,203 @@ function GetProgramSize(nClass, nRating) {
         return g_nProgramComplexity[nClass] * nRating;
 }
 
+// Warning detection system
+function detectWarnings() {
+        const warnings = [];
+        
+        // Skip if warnings are disabled
+        if (!g_pChar || !g_pChar.m_bHomeWarnings) {
+                return warnings;
+        }
+        
+        // Add test warning strip for debugging
+        warnings.push({ 
+                type: 'test', 
+                severity: 'notice', 
+                message: 'Testing', 
+                target: 'character' 
+        });
+        
+        // Health monitoring (Physical only, skip if 100%)
+        const physicalHealthPercent = getPhysicalHealthPercent();
+        if (physicalHealthPercent < 25 && physicalHealthPercent > 0) {
+                warnings.push({ 
+                        type: 'health', 
+                        severity: 'critical', 
+                        message: 'Critical Health!', 
+                        target: 'rest' 
+                });
+        } else if (physicalHealthPercent < 50 && physicalHealthPercent < 100 && physicalHealthPercent >= 25) {
+                warnings.push({ 
+                        type: 'health', 
+                        severity: 'warning', 
+                        message: 'Health Low!', 
+                        target: 'rest' 
+                });
+        }
+        
+        // Skill points check
+        if (canAffordNewSkill()) {
+                warnings.push({ 
+                        type: 'skills', 
+                        severity: 'notice', 
+                        message: 'Skill Points Available!', 
+                        target: 'character' 
+                });
+        }
+        
+        // Lifestyle upgrade check
+        if (canAffordLifestyleUpgrade()) {
+                warnings.push({ 
+                        type: 'lifestyle', 
+                        severity: 'notice', 
+                        message: 'Can Upgrade Lifestyle!', 
+                        target: 'character' 
+                });
+        }
+        
+        // Rent deadline check
+        const rentDaysLeft = getRentDaysLeft();
+        const rentCost = g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle];
+        const canAffordRent = g_pChar.m_nCredits >= rentCost;
+        
+        if (rentDaysLeft <= 3 && !canAffordRent) {
+                warnings.push({ 
+                        type: 'rent', 
+                        severity: 'critical', 
+                        message: 'Rent Due Soon!', 
+                        target: 'character' 
+                });
+        } else if (rentDaysLeft <= 5 && !canAffordRent) {
+                warnings.push({ 
+                        type: 'rent', 
+                        severity: 'warning', 
+                        message: 'Rent Due Soon', 
+                        target: 'character' 
+                });
+        }
+        console.log("detected warnings" + warnings);
+        return warnings;
+}
+
+// Helper functions for warning strip
+function canAffordNewSkill() {
+        // Simple check - most skills cost 1 point
+        return g_pChar && g_pChar.m_nSkillPoints > 0;
+}
+
+function canAffordLifestyleUpgrade() {
+        if (!g_pChar) return false;
+        const currentLifestyle = g_pChar.m_nLifestyle;
+        const nextLifestyle = currentLifestyle + 1;
+        return nextLifestyle <= MAX_LIFESTYLE && g_pChar.m_nCredits >= (g_nLifestyleMonthlyCost[nextLifestyle] * LIFESTYLE_UPGRADE_FACTOR);
+}
+
+function getPhysicalHealthPercent() {
+        if (!g_pChar) return 100;
+        return Math.round((g_pChar.m_nHealthPhysical / MAX_HEALTH) * 100);
+}
+
+function getRentDaysLeft() {
+        if (!g_pChar) return 30;
+        // This is an approximation - you may need to adjust based on actual rent tracking
+        return 30; // Placeholder - replace with actual rent tracking if available
+}
+
+function canAffordRent() {
+        if (!g_pChar) return false;
+        return g_pChar.m_nCredits >= g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle];
+}
+
+// Warning strip rendering function
+function renderWarningStrip(container) {
+        const warnings = detectWarnings();
+        console.log('renderWarningStrip called, warnings found:', warnings.length);
+        if (warnings.length === 0) return;
+        
+        // Group warnings by type and keep highest severity for same type
+        const warningMap = new Map();
+        warnings.forEach(warning => {
+                const existing = warningMap.get(warning.type);
+                if (!existing || getSeverityLevel(existing.severity) < getSeverityLevel(warning.severity)) {
+                        warningMap.set(warning.type, warning);
+                }
+        });
+        
+        const uniqueWarnings = Array.from(warningMap.values());
+        if (uniqueWarnings.length === 0) return;
+        
+        const warningStrip = document.createElement("div");
+        warningStrip.className = "warning-strip";
+        
+        uniqueWarnings.forEach(warning => {
+                const warningItem = document.createElement("div");
+                warningItem.className = `warning-item warning-${warning.severity}`;
+                warningItem.textContent = warning.message;
+                warningItem.style.cursor = "pointer";
+                
+                warningItem.addEventListener('click', () => {
+                        // Open target popup based on warning type (same as home screen buttons)
+                        switch(warning.target) {
+                                case 'rest':
+                                        Popup.rest();
+                                        break;
+                                case 'character':
+                                        if (Config.m_bModernUI) {
+                                                Popup.modern_charview();
+                                        } else {
+                                                Popup.charview();
+                                        }
+                                        break;
+                                default:
+                                        if (Config.m_bModernUI) {
+                                                Popup.modern_charview();
+                                        } else {
+                                                Popup.charview();
+                                        }
+                        }
+                });
+                
+                warningStrip.appendChild(warningItem);
+        });
+        
+        // Insert at top of popup content (after any potential existing content)
+        if (container.firstChild) {
+                container.insertBefore(warningStrip, container.firstChild);
+        } else {
+                container.appendChild(warningStrip);
+        }
+}
+
+// Helper function to compare severity levels
+function getSeverityLevel(severity) {
+        switch(severity) {
+                case 'critical': return 3;
+                case 'warning': return 2;
+                case 'notice': return 1;
+                default: return 0;
+        }
+}
+
+// Function to update warning strip on home screen if it's currently visible
+function updateHomeScreenWarnings() {
+        // Check if home screen popup is currently visible
+        const homeviewPopup = document.getElementById("popup_homeview");
+        console.log("updateHomeScreenWarnings called");
+        if (homeviewPopup && homeviewPopup.style.display !== "none") {
+                const container = document.getElementById("homeview-container");
+                console.log("Home screen popup is visible, updating warnings");
+                if (container) {
+                        // Remove existing warning strips
+                        const existingStrips = container.querySelectorAll(".warning-strip");
+                        existingStrips.forEach(strip => strip.remove());
+                        
+                        // Add updated warning strip
+                        renderWarningStrip(container);
+                }
+        }
+}
+
 
 
 function DoAttackVsIce(pProgram, pIce) {
@@ -3259,9 +3456,10 @@ const g_bInitialProgramFlag = [
 
 function Character() {
 
-        // Game settings
+// Game settings
         this.m_bTooltips = false; // Tooltips enabled
         this.m_bIronMan = false; // Ironman Mode
+        this.m_bHomeWarnings = true; // Home screen warning strips
 
         //------------------
         // Basic Attributes
@@ -3367,6 +3565,7 @@ function Character() {
 
         // Current health
         this.m_nHealthPhysical = MAX_HEALTH;
+        updateHomeScreenWarnings();
         this.m_nHealthMental = 0;
         this.m_nHealthDeck = 0;
 
@@ -9387,6 +9586,7 @@ function DoDumpDecker(nCause) {
                                 // Saved by autodump
                                 szTxt = "You have been saved by your BioMonitor's AutoDump.";
                                 g_pChar.m_nHealthPhysical = 1;
+        updateHomeScreenWarnings();
                         } else {
                                 // Death!
                                 Popup.alert("You have died!\n(Does anyone smell grey matter burning?)").then(() => {
@@ -9590,7 +9790,9 @@ function DoDumpDecker_3(nCause) {
 
         // Update the character information
         g_pChar.m_nSkillPoints += nSkillPoints;
+        updateHomeScreenWarnings();
         g_pChar.m_nCredits += nTotal;
+        updateHomeScreenWarnings();
 
         // Fill in the dialog
         let dlgResult = {};
@@ -9908,6 +10110,7 @@ function DoEndPlayerTurn() {
         if (g_pChar.m_nHealthMental < 1) {
                 // Modify physical health
                 g_pChar.m_nHealthPhysical += g_pChar.m_nHealthMental;
+        updateHomeScreenWarnings();
                 MV.UpdateBar(BAR_LETHAL);
 
                 // Dump the decker
@@ -9925,6 +10128,7 @@ function DoEndPlayerTurn() {
         if (g_pChar.m_nHealthDeck < 1) {
                 // Extra deck damage becomes physical damage
                 g_pChar.m_nHealthPhysical += g_pChar.m_nHealthDeck;
+        updateHomeScreenWarnings();
                 MV.UpdateBar(BAR_LETHAL);
 
                 // Dump the decker
@@ -12450,10 +12654,10 @@ var Anim = {};
 // popup_homeview.js
 
 {
-        let [obj] = HTMLbuilder(
+let [obj] = HTMLbuilder(
                 ["div", true, {id:"popup_homeview", style:{background:"#33f",color:"white"}}, [
                         ["h2", {textContent:"Decker @ Home"}],
-                        ["div", {style:{background:"#33f",color:"white"}}, [
+                        ["div", {id:"homeview-container", style:{background:"#33f",color:"white"}}, [
                                 ["li", [
                                         ["button", {style:{backgroundPositionX:"0"}}],
                                         ["span", {textContent:"View Character"}],
@@ -12501,8 +12705,13 @@ var Anim = {};
         Popup.onclick( buttons[6], view_matrix );
         Popup.onclick( buttons[7], view_options );
 
-        Popup.create("homeview", obj);
-
+Popup.create("homeview", obj).onInit(() => {
+                // Add warning strip on initialization
+                const container = document.getElementById("homeview-container");
+                if (container) {
+                        renderWarningStrip(container);
+                }
+        });
 
         function view_char() {
                 if (Config.m_bModernUI) {
@@ -12764,6 +12973,7 @@ var Anim = {};
 
         function upgrade_attack() {
                 g_pChar.m_nSkillPoints -= g_pChar.m_nAttackSkill;
+        updateHomeScreenWarnings();
                 g_pChar.m_nAttackSkill++;
                 initFunc();
         }
@@ -13899,7 +14109,8 @@ function do_purchase(pItem, callback) {
 
                         function soft_purchase() {
                                 // Get the money
-                                g_pChar.m_nCredits -= pItem.m_nPrice;
+g_pChar.m_nCredits -= pItem.m_nPrice;
+                                updateHomeScreenWarnings();
 
                                 // Buy the program
                                 let pProgram = Program.create(pItem.m_nSubType, pItem.m_nRating);
@@ -15242,21 +15453,24 @@ function do_purchase(pItem, callback) {
                 });
         }
         function home_all() {
-                g_pChar.PassTime(l_nFullTime, () => {
+g_pChar.PassTime(l_nFullTime, () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
+                        updateHomeScreenWarnings();
                         initFunc();
                 });
         }
         function hosp_one() {
-                g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
+g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
                         g_pChar.m_nHealthPhysical++;
+                        updateHomeScreenWarnings();
                         g_pChar.m_nCredits -= l_nBaseHospCost;
                         initFunc();
                 });
         }
         function hosp_all() {
-                g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
+g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
+                        updateHomeScreenWarnings();
                         g_pChar.m_nCredits -= l_nFullHospCost;
                         initFunc();
                 });
@@ -15335,10 +15549,16 @@ function do_purchase(pItem, callback) {
                                                         ["span", {textContent:"Modern UI"}],
                                                 ]],
                                         ]],
-                                        ["div", [
+["div", [
                                                 ["label", [
                                                         ["input", {type:"checkbox"}],
                                                         ["span", {textContent:"Modern Matrix"}],
+                                                ]],
+                                        ]],
+                                        ["div", [
+                                                ["label", [
+                                                        ["input", {type:"checkbox"}],
+                                                        ["span", {textContent:"Home Screen Warnings"}],
                                                 ]],
                                         ]],
                                         ["div", {className:"flexH",style:{marginTop:".5em"}}, [
@@ -15358,7 +15578,7 @@ function do_purchase(pItem, callback) {
                 Popup.alert("This fixes a bug in the original code, that caused less enemies to spawn.\nApplies only to newly generated Systems.");
         }
 
-        let inputs = [...obj.getElementsByTagName("input")];
+let inputs = [...obj.getElementsByTagName("input")];
         inputs[0].onchange = () => { g_pChar.m_bTooltips = inputs[0].checked; };
         inputs[1].onchange = () => { Config.difficulty = inputs[1].checked; };
         inputs[2].onchange = () => { Config.mute = !inputs[2].checked; };
@@ -15366,6 +15586,7 @@ function do_purchase(pItem, callback) {
         inputs[4].onchange = () => { Config.warnclose = inputs[4].checked; };
         inputs[5].onchange = () => { Config.m_bModernUI = inputs[5].checked; };
         inputs[6].onchange = () => { Config.m_bModernMatrix = inputs[6].checked; };
+        inputs[7].onchange = () => { g_pChar.m_bHomeWarnings = inputs[7].checked; };
         inpVol.oninput = () => {
                 Config.volume = +inpVol.value;
                 txtVol.textContent = Config.volume + "%";
@@ -15392,13 +15613,14 @@ function do_purchase(pItem, callback) {
                         buttons[0].disabled = false;
                         buttons[1].disabled = false;
                 }
-                inputs[0].checked = g_pChar.m_bTooltips;
+inputs[0].checked = g_pChar.m_bTooltips;
                 inputs[1].checked = Config.difficulty;
                 inputs[2].checked = !Config.mute;
                 inputs[3].checked = Config.viewice;
                 inputs[4].checked = Config.warnclose;
                 inputs[5].checked = Config.m_bModernUI;
                 inputs[6].checked = Config.m_bModernMatrix;
+                inputs[7].checked = g_pChar.m_bHomeWarnings;
                 inpVol.value = Config.volume;
 
                 // don't allow difficulty change while in the matrix
