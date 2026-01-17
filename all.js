@@ -13688,13 +13688,12 @@ Popup.create("homeview", obj).onInit(() => {
 
 card.innerHTML = `
                         <div class="program-info-row">
-                                <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 32px; height: 32px; flex-shrink: 0;"></div>
+                                <div class="program-icon" style="background: ${iconBg} ${iconPos}; width: 28px; height: 28px; flex-shrink: 0;"></div>
                                 <div class="program-name-large clickable-name">${programName}</div>
                         </div>
                         <div class="program-meta">
-                                <span class="program-type">${className}</span>
-                                <span class="program-rating">${program.m_nRating}</span>
-                                <span class="program-size">${size}</span>
+                                <span class="program-type-rating">(${className} ${program.m_nRating})</span>
+                                <span class="program-size-label">Size: ${size} MP</span>
                         </div>
                         <div class="program-actions-row">
                                 <button class="prog-btn load-btn" style="font-size: 0.7em; padding: 3px 8px;">${isLoaded ? "Unload" : "Load"}</button>
