@@ -419,7 +419,7 @@
     transform: translateY(-1px);
 }
 
-/* ===== CHARACTER STAT CARDS (Future) ===== */
+/* ===== CHARACTER STAT CARDS ===== */
 .card-character-stat {
     background: #222;
     border: 1px solid #444;
@@ -429,6 +429,41 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+/* Big number stat card variant */
+.card-stat-big {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.card-stat-big:hover {
+    border-color: #0f0;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.stat-big-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #0f0;
+    line-height: 1;
+}
+
+.stat-big-label {
+    font-size: 0.8em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-name {
@@ -452,10 +487,181 @@
     transition: width 0.3s ease;
 }
 
+.stat-fill.health {
+    background: linear-gradient(90deg, #f00, #ff0);
+}
+
+.stat-fill.time {
+    background: linear-gradient(90deg, #f80, #ff0);
+}
+
 .stat-values {
     font-size: 0.8em;
     color: #888;
     text-align: center;
+}
+
+/* ===== SKILL CARDS ===== */
+.card-skill {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.card-skill:hover {
+    border-color: #0f0;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.1);
+}
+
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.skill-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.9em;
+    flex: 1;
+}
+
+.skill-value {
+    color: #0f0;
+    font-weight: bold;
+    font-size: 1.1em;
+    min-width: 20px;
+    text-align: right;
+}
+
+.skill-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skill-cost {
+    font-size: 0.7em;
+    color: #888;
+    white-space: nowrap;
+}
+
+.skill-upgrade-btn {
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #0f0;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skill-upgrade-btn:hover:not(:disabled) {
+    background: #040;
+    border-color: #0f0;
+    color: #fff;
+}
+
+.skill-upgrade-btn:disabled {
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===== LIFESTYLE CARD ===== */
+.card-lifestyle {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lifestyle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lifestyle-title {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1em;
+}
+
+.lifestyle-current {
+    color: #0f0;
+    font-weight: bold;
+}
+
+.lifestyle-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 0.8em;
+}
+
+.lifestyle-detail {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.lifestyle-label {
+    color: #888;
+}
+
+.lifestyle-value {
+    color: #fff;
+    text-align: right;
+}
+
+.lifestyle-upgrade {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.lifestyle-cost {
+    font-size: 0.9em;
+    color: #0f0;
+}
+
+/* ===== CHARACTER INFO GRID ===== */
+.character-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.progress-cards-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 /* ===== PROJECT CARDS (Future) ===== */

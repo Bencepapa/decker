@@ -13066,25 +13066,288 @@ Popup.create("homeview", obj).onInit(() => {
 // popup_modern_charview.js
 
 {
-        let [obj, h2, btnClose] = HTMLbuilder(
+        let [obj, h2, nameCard, moneyCard, repCard, skillPtsCard, healthCard, rentCard, 
+             skillsContainer, lifestyleCard, btnUpgradeLifestyle, btnDeck, btnClose] = HTMLbuilder(
                 ["div", true, {className:"modern-ui"}, [
                         ["h2", true],
-                        ["div", {className:"flexV", style:{padding:"20px", alignItems:"center", justifyContent:"center", flex:1}}, [
-                                ["div", {textContent:"Modern Character Information", style:{fontSize:"1.5em", marginBottom:"20px", color:"#0f0"}}],
-                                ["div", {textContent:"This interface is under development.", style:{color:"#888"}}],
-                                ["div", {className:"btnGroup", style:{marginTop:"30px"}}, [
-                                        ["button", true, {textContent:"Close"}],
+                        ["div", {style:{padding:"16px", display:"flex", flexDirection:"column", gap:"16px", flex:1, overflowY:"auto"}}, [
+                                // Character Info Grid (top row)
+                                ["div", {className:"character-info-grid"}, [
+                                        ["div", {className:"card-stat-big"}, [
+                                                ["div", true, {className:"stat-big-value"}], // nameCard
+                                                ["div", {className:"stat-big-label", textContent:"Name"}],
+                                        ]],
+                                        ["div", {className:"card-stat-big"}, [
+                                                ["div", true, {className:"stat-big-value"}], // moneyCard
+                                                ["div", {className:"stat-big-label", textContent:"Credits"}],
+                                        ]],
+                                        ["div", {className:"card-stat-big"}, [
+                                                ["div", true, {className:"stat-big-value"}], // repCard
+                                                ["div", {className:"stat-big-label", textContent:"Reputation"}],
+                                        ]],
+                                        ["div", {className:"card-stat-big"}, [
+                                                ["div", true, {className:"stat-big-value"}], // skillPtsCard
+                                                ["div", {className:"stat-big-label", textContent:"Skill Points"}],
+                                        ]],
+                                ]],
+                                
+                                // Progress Cards Row (health and rent)
+                                ["div", {className:"progress-cards-row"}, [
+                                        ["div", {className:"card-character-stat"}, [
+                                                ["div", {className:"stat-name", textContent:"Physical Health"}],
+                                                ["div", {className:"stat-bar"}, [
+                                                        ["div", {className:"stat-fill health"}],
+                                                ]],
+                                                ["div", true, {className:"stat-values"}], // healthCard
+                                        ]],
+                                        ["div", {className:"card-character-stat"}, [
+                                                ["div", {className:"stat-name", textContent:"Rent Due In"}],
+                                                ["div", {className:"stat-bar"}, [
+                                                        ["div", {className:"stat-fill time"}],
+                                                ]],
+                                                ["div", true, {className:"stat-values"}], // rentCard
+                                        ]],
+                                ]],
+                                
+                                // Skills Grid
+                                ["div", true, {className:"skills-grid"}, [ // skillsContainer
+                                        // Attack
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Attack"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                        // Defense
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Defense"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                        // Stealth
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Stealth"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                        // Analysis
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Analysis"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                        // Programming
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Programming"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                        // Chip Design
+                                        ["div", {className:"card-skill"}, [
+                                                ["div", {className:"skill-header"}, [
+                                                        ["div", {className:"skill-name", textContent:"Chip Design"}],
+                                                        ["div", {className:"skill-value", textContent:"0"}],
+                                                ]],
+                                                ["div", {className:"skill-controls"}, [
+                                                        ["div", {className:"skill-cost", textContent:"Cost: -"}],
+                                                        ["button", {className:"skill-upgrade-btn", textContent:"+", disabled:true}],
+                                                ]],
+                                        ]],
+                                ]],
+                                
+                                // Lifestyle Card
+                                ["div", true, {className:"card-lifestyle"}, [ // lifestyleCard
+                                        ["div", {className:"lifestyle-header"}, [
+                                                ["div", {className:"lifestyle-title", textContent:"Current Lifestyle"}],
+                                                ["div", {className:"lifestyle-current"}],
+                                        ]],
+                                        ["div", {className:"lifestyle-details"}, [
+                                                ["div", {className:"lifestyle-detail"}, [
+                                                        ["div", {className:"lifestyle-label", textContent:"Monthly Cost:"}],
+                                                        ["div", {className:"lifestyle-value"}],
+                                                ]],
+                                                ["div", {className:"lifestyle-detail"}, [
+                                                        ["div", {className:"lifestyle-label", textContent:"Days Until Due:"}],
+                                                        ["div", {className:"lifestyle-value"}],
+                                                ]],
+                                        ]],
+                                        ["div", {className:"lifestyle-upgrade"}, [
+                                                ["div", {className:"lifestyle-cost"}],
+                                                ["button", true, {textContent:"Upgrade Lifestyle"}],
+                                        ]],
+                                ]],
+                                
+                                // Button Row
+                                ["div", {className:"btnGroup"}, [
+                                        ["button", true, {textContent:"View Deck"}], // btnDeck
+                                        ["button", true, {textContent:"Close"}], // btnClose
                                 ]],
                         ]],
                 ]],
         );
 
+        // Get skill elements for easier access
+        const skillElements = skillsContainer.querySelectorAll('.card-skill');
+        const skillData = [
+                { name: 'Attack', getter: () => g_pChar.m_nAttackSkill, setter: (v) => g_pChar.m_nAttackSkill = v },
+                { name: 'Defense', getter: () => g_pChar.m_nDefenseSkill, setter: (v) => g_pChar.m_nDefenseSkill = v },
+                { name: 'Stealth', getter: () => g_pChar.m_nStealthSkill, setter: (v) => g_pChar.m_nStealthSkill = v },
+                { name: 'Analysis', getter: () => g_pChar.m_nAnalysisSkill, setter: (v) => g_pChar.m_nAnalysisSkill = v },
+                { name: 'Programming', getter: () => g_pChar.m_nProgrammingSkill, setter: (v) => g_pChar.m_nProgrammingSkill = v },
+                { name: 'Chip Design', getter: () => g_pChar.m_nChipDesignSkill, setter: (v) => g_pChar.m_nChipDesignSkill = v }
+        ];
+
+        Popup.onclick(btnUpgradeLifestyle, upgradeLifestyle);
+        Popup.onclick(btnDeck, viewDeck);
         Popup.onclick(btnClose, close);
+
+        // Add click handlers for skill upgrade buttons
+        skillElements.forEach((skillCard, index) => {
+                const upgradeBtn = skillCard.querySelector('.skill-upgrade-btn');
+                if (upgradeBtn) {
+                        Popup.onclick(upgradeBtn, () => upgradeSkill(index));
+                }
+        });
+
+        // Add lifestyle upgrade handler
+/*        const lifestyleUpgradeBtn = lifestyleCard.querySelector('.lifestyle-upgrade button');
+        if (lifestyleUpgradeBtn) {
+                Popup.onclick(lifestyleUpgradeBtn, upgradeLifestyle);
+        }*/
 
         Popup.create("modern_charview", obj).onInit(initFunc).onKey({"Escape":close});
 
         function initFunc() {
-                h2.textContent = g_pChar.m_szName + " - Modern Char Info";
+                // Set header
+                h2.textContent = g_pChar.m_szName;
+                
+                // Basic info cards
+                nameCard.textContent = g_pChar.m_szName;
+                moneyCard.textContent = g_pChar.m_nCredits + "cr";
+                
+                // Reputation
+                let rep = g_szRepLevelString[g_pChar.m_nRepLevel];
+                if (g_pChar.m_nRepLevel === ((g_pChar.m_nLifestyle + 1) * 4))
+                        rep += " (Max)";
+                repCard.textContent = rep;
+                
+                // Skill points
+                skillPtsCard.textContent = g_pChar.m_nSkillPoints;
+                
+                // Health progress bar
+                const healthPercent = g_pChar.m_nHealthPhysical * HEALTH_INCREMENT;
+                const healthFill = healthCard.parentElement.querySelector('.stat-fill.health');
+                const healthValues = healthCard;
+                healthFill.style.width = healthPercent + "%";
+                healthValues.textContent = healthPercent + "%";
+                
+                // Rent due progress bar
+                let dueIn = (GetDays(g_pChar.m_nMonth,g_pChar.m_nYear) - g_pChar.m_nDayOfMonth);
+                const daysInMonth = GetDays(g_pChar.m_nMonth,g_pChar.m_nYear);
+                const rentPercent = ((daysInMonth - dueIn) / daysInMonth) * 100;
+                const rentFill = rentCard.parentElement.querySelector('.stat-fill.time');
+                const rentValues = rentCard;
+                rentFill.style.width = rentPercent + "%";
+                rentValues.textContent = (dueIn > 1) ? (dueIn + " days") : "Tomorrow";
+                
+                // Update skills
+                skillElements.forEach((skillCard, index) => {
+                        const skill = skillData[index];
+                        const valueElement = skillCard.querySelector('.skill-value');
+                        const costElement = skillCard.querySelector('.skill-cost');
+                        const upgradeBtn = skillCard.querySelector('.skill-upgrade-btn');
+                        
+                        const currentValue = skill.getter();
+                        const upgradeCost = currentValue;
+                        
+                        valueElement.textContent = currentValue;
+                        costElement.textContent = "Cost: " + upgradeCost;
+                        
+                        // Enable/disable upgrade button
+                        if (g_pChar.m_bOnRun) {
+                                upgradeBtn.disabled = true;
+                        } else {
+                                upgradeBtn.disabled = (upgradeCost > g_pChar.m_nSkillPoints);
+                        }
+                });
+                
+                // Lifestyle information
+                const lifestyleNameElement = lifestyleCard.querySelector('.lifestyle-current');
+                const costElement = lifestyleCard.querySelectorAll('.lifestyle-value')[0];
+                const dueElement = lifestyleCard.querySelectorAll('.lifestyle-value')[1];
+                const upgradeCostElement = lifestyleCard.querySelector('.lifestyle-cost');
+                const upgradeBtn = lifestyleCard.querySelector('.lifestyle-upgrade button');
+                
+                lifestyleNameElement.textContent = g_pChar.GetLifestyleString();
+                costElement.textContent = g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle] + "cr";
+                dueElement.textContent = (dueIn > 1) ? (dueIn + " days") : "Tomorrow";
+                
+                // Upgrade cost and button state
+                if (g_pChar.m_nLifestyle !== MAX_LIFESTYLE) {
+                        const upgradeCost = g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle + 1] * LIFESTYLE_UPGRADE_FACTOR;
+                        upgradeCostElement.textContent = "Upgrade Cost: " + upgradeCost + "cr";
+                        upgradeBtn.disabled = g_pChar.m_bOnRun || g_pChar.m_nCredits < upgradeCost;
+                } else {
+                        upgradeCostElement.textContent = "Max Level";
+                        upgradeBtn.disabled = true;
+                }
+        }
+
+        function upgradeSkill(skillIndex) {
+                const skill = skillData[skillIndex];
+                const currentValue = skill.getter();
+                const upgradeCost = currentValue;
+                
+                if (upgradeCost <= g_pChar.m_nSkillPoints && !g_pChar.m_bOnRun) {
+                        g_pChar.m_nSkillPoints -= upgradeCost;
+                        skill.setter(currentValue + 1);
+                        initFunc(); // Refresh the display
+                }
+        }
+
+        function upgradeLifestyle() {
+                if (g_pChar.m_nLifestyle < MAX_LIFESTYLE && !g_pChar.m_bOnRun) {
+                        const upgradeCost = g_nLifestyleMonthlyCost[g_pChar.m_nLifestyle + 1] * LIFESTYLE_UPGRADE_FACTOR;
+                        if (g_pChar.m_nCredits >= upgradeCost) {
+                                g_pChar.m_nLifestyle++;
+                                g_pChar.m_nCredits -= upgradeCost;
+                                initFunc();
+                                
+                                Popup.alert("Lifestyle upgraded. New contracts and shop items are now available.");
+                                g_pChar.GenerateShopItems();
+                                g_pChar.ClearContracts();
+                                g_pChar.GenerateContracts();
+                        }
+                }
+        }
+
+        function viewDeck() {
+                Popup.close();
+                Popup.deckview();
         }
 
         function close() {
