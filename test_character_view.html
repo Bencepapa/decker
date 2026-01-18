@@ -118,7 +118,7 @@
         window.HTMLbuilder = (structure) => {
             const elements = [];
             
-            function createElement(def, parentElements = []) {
+            function createElement(def) {
                 if (Array.isArray(def)) {
                     const [tag, isElement, props, children] = def;
                     const element = document.createElement(tag);
@@ -129,8 +129,10 @@
                                 element.textContent = props[key];
                             } else if (key === 'className') {
                                 element.className = props[key];
-                            } else if (typeof props[key] === 'object') {
-                                Object.assign(element.style, props[key]);
+                            } else if (key === 'style' && typeof props[key] === 'object') {
+                                Object.keys(props[key]).forEach(styleKey => {
+                                    element.style[styleKey] = props[key][styleKey];
+                                });
                             } else {
                                 element.setAttribute(key, props[key]);
                             }
@@ -143,12 +145,18 @@
                                 if (typeof child === 'object' && child !== null) {
                                     const childElement = createElement(child);
                                     if (childElement) element.appendChild(childElement);
+                                } else if (typeof child === 'string') {
+                                    element.appendChild(document.createTextNode(child));
                                 }
                             });
+                        } else if (typeof children === 'object') {
+                            // Handle case where children is not an array but an object definition
+                            const childElement = createElement(children);
+                            if (childElement) element.appendChild(childElement);
                         }
                     }
                     
-                    if (isElement !== false) {
+                    if (isElement === true) {
                         elements.push(element);
                     }
                     return element;
@@ -172,23 +180,19 @@
                                 // Character Info Grid (top row)
                                 ["div", {className:"character-info-grid"}, [
                                         ["div", {className:"card-stat-big"}, [
-                                                ["div", {className:"stat-big-value"}, [ // nameCard
-                                                ]],
+                                                ["div", true, {className:"stat-big-value"}], // nameCard
                                                 ["div", {className:"stat-big-label", textContent:"Name"}],
                                         ]],
                                         ["div", {className:"card-stat-big"}, [
-                                                ["div", {className:"stat-big-value"}, [ // moneyCard
-                                                ]],
+                                                ["div", true, {className:"stat-big-value"}], // moneyCard
                                                 ["div", {className:"stat-big-label", textContent:"Credits"}],
                                         ]],
                                         ["div", {className:"card-stat-big"}, [
-                                                ["div", {className:"stat-big-value"}, [ // repCard
-                                                ]],
+                                                ["div", true, {className:"stat-big-value"}], // repCard
                                                 ["div", {className:"stat-big-label", textContent:"Reputation"}],
                                         ]],
                                         ["div", {className:"card-stat-big"}, [
-                                                ["div", {className:"stat-big-value"}, [ // skillPtsCard
-                                                ]],
+                                                ["div", true, {className:"stat-big-value"}], // skillPtsCard
                                                 ["div", {className:"stat-big-label", textContent:"Skill Points"}],
                                         ]],
                                 ]],
@@ -200,19 +204,19 @@
                                                 ["div", {className:"stat-bar"}, [
                                                         ["div", {className:"stat-fill health"}],
                                                 ]],
-                                                ["div", {className:"stat-values"}], // healthCard
+                                                ["div", true, {className:"stat-values"}], // healthCard
                                         ]],
                                         ["div", {className:"card-character-stat"}, [
                                                 ["div", {className:"stat-name", textContent:"Rent Due In"}],
                                                 ["div", {className:"stat-bar"}, [
                                                         ["div", {className:"stat-fill time"}],
                                                 ]],
-                                                ["div", {className:"stat-values"}], // rentCard
+                                                ["div", true, {className:"stat-values"}], // rentCard
                                         ]],
                                 ]],
                                 
                                 // Skills Grid
-                                ["div", {className:"skills-grid"}, [
+                                ["div", true, {className:"skills-grid"}, [ // skillsContainer
                                         // Attack
                                         ["div", {className:"card-skill"}, [
                                                 ["div", {className:"skill-header"}, [
@@ -282,7 +286,7 @@
                                 ]],
                                 
                                 // Lifestyle Card
-                                ["div", {className:"card-lifestyle"}, [
+                                ["div", true, {className:"card-lifestyle"}, [ // lifestyleCard
                                         ["div", {className:"lifestyle-header"}, [
                                                 ["div", {className:"lifestyle-title", textContent:"Current Lifestyle"}],
                                                 ["div", {className:"lifestyle-current"}],
@@ -299,14 +303,14 @@
                                         ]],
                                         ["div", {className:"lifestyle-upgrade"}, [
                                                 ["div", {className:"lifestyle-cost"}],
-                                                ["button", {textContent:"Upgrade Lifestyle"}],
+                                                ["button", true, {textContent:"Upgrade Lifestyle"}],
                                         ]],
                                 ]],
                                 
                                 // Button Row
                                 ["div", {className:"btnGroup"}, [
-                                        ["button", true, {textContent:"View Deck"}],
-                                        ["button", true, {textContent:"Close"}],
+                                        ["button", true, {textContent:"View Deck"}], // btnDeck
+                                        ["button", true, {textContent:"Close"}], // btnClose
                                 ]],
                         ]],
                 ]],
