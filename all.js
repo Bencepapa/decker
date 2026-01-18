@@ -13593,8 +13593,8 @@ Popup.create("homeview", obj).onInit(() => {
                         let programContainer = document.createElement("div");
                         programContainer.style.gridColumn = "1 / -1";
                         programContainer.style.display = "grid";
-                        programContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(140px, 1fr))";
-                        programContainer.style.gridGap = "15px";
+                        programContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
+                        programContainer.style.gridGap = "18px";
                         container.appendChild(programContainer);
 
                         // Render program cards using new card system
@@ -13816,31 +13816,9 @@ Popup.create("homeview", obj).onInit(() => {
                         else if (program.m_nClass === PROGRAM_SCAN) g_pChar.m_pActiveScan = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pActiveReflect = program;
                         else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
-                }
-
-                // Find and update the card in the new system
-                const cardWrapper = cardElement.closest('.card-wrapper');
-                if (cardWrapper) {
-                        // Recreate the card with updated data
-                        const programCard = CardFactory.create('program', program, {
-                                onToggleLoad: toggleProgramLoad,
-                                onToggleDefault: toggleProgramDefault,
-                                onTrash: trashProgram
-                        });
-                        
-                        const newCardElement = programCard.createElement();
-                        cardWrapper.replaceWith(newCardElement);
-                        
-                        // Animate the update
-                        newCardElement.querySelector('.card-program')?.animate('highlight', { color: isLoaded ? '#f00' : '#0f0' });
-                }
-                
-                // Update load display
-                if (window.updateProgramLoadDisplay) {
-                        window.updateProgramLoadDisplay();
-                }
+}
         }
-
+        
         function toggleProgramDefault(program, card) {
                 if (!g_pChar) return;
                 
@@ -13924,14 +13902,16 @@ Popup.create("homeview", obj).onInit(() => {
                 });
         }
 
-        // Drag and drop functionality
+// Drag and drop functionality
         let draggedElement = null;
 
         function handleDragStart(e) {
-                draggedElement = this;
-                this.style.opacity = '0.5';
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/html', this.innerHTML);
+                draggedElement = e.target.closest('.card-program, .card-hardware');
+                if (draggedElement) {
+                        draggedElement.style.opacity = '0.5';
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/html', draggedElement.innerHTML);
+                }
         }
 
         function handleDragOver(e) {
@@ -13947,26 +13927,54 @@ Popup.create("homeview", obj).onInit(() => {
                         e.stopPropagation();
                 }
 
-                if (draggedElement !== this && g_pChar && g_pChar.m_olSoftware) {
-                        let draggedIndex = parseInt(draggedElement.dataset.index);
-                        let targetIndex = parseInt(this.dataset.index);
-
-                        // Swap programs in array
-                        let temp = g_pChar.m_olSoftware[draggedIndex];
-                        g_pChar.m_olSoftware[draggedIndex] = g_pChar.m_olSoftware[targetIndex];
-                        g_pChar.m_olSoftware[targetIndex] = temp;
-
-                        // Refresh display
-                        renderCards();
+                const dropTarget = e.target.closest('.card-program, .card-hardware');
+                if (!dropTarget || draggedElement === dropTarget || !g_pChar || !g_pChar.m_olSoftware) {
+                        return;
                 }
 
-                return false;
+                if (!draggedElement || !draggedElement.dataset || !dropTarget || !dropTarget.dataset) {
+                        console.error('Invalid drag/drop elements');
+                        return;
+                }
+                
+                let draggedIndex = parseInt(draggedElement.dataset.index);
+                let targetIndex = parseInt(dropTarget.dataset.index);
+
+                // Swap programs in array
+                if (!g_pChar || !g_pChar.m_olSoftware) {
+                        console.error('g_pChar or m_olSoftware not available');
+                        return;
+                }
+                
+                let temp = g_pChar.m_olSoftware[draggedIndex];
+                g_pChar.m_olSoftware[draggedIndex] = g_pChar.m_olSoftware[targetIndex];
+                g_pChar.m_olSoftware[targetIndex] = temp;
+
+                // Refresh display
+                if (typeof renderCards === 'function') {
+                        renderCards();
+                }
         }
 
         function handleDragEnd(e) {
-                this.style.opacity = '1';
+                if (draggedElement) {
+                        draggedElement.style.opacity = '1';
+                        draggedElement = null;
+                }
         }
+
+/*                // Swap programs in array
+                let temp = g_pChar.m_olSoftware[draggedIndex];
+                g_pChar.m_olSoftware[draggedIndex] = g_pChar.m_olSoftware[targetIndex];
+                g_pChar.m_olSoftware[targetIndex] = temp;
+
+// Refresh display
+                if (typeof renderCards === 'function') {
+                        renderCards();
+                }*/
 }
+
+
 
 // popup_deckname.js
 

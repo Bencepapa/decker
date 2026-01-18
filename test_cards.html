@@ -288,12 +288,36 @@
                 this.logs = [];
             }
             
-            log(message, type = 'info') {
-                const timestamp = new Date().toLocaleTimeString();
-                const entry = `[${timestamp}] ${message}`;
-                this.logs.push({ message: entry, type });
+log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            this.logs.push({ message: entry, type });
+            
+            // Fix: Proper error handling and DOM traversal
+            let outputElement = null;
+            try {
+                if (event && event.target && typeof event.target.closest === 'function') {
+                    const testSection = event.target.closest('.test-section');
+                    if (testSection) {
+                        outputElement = testSection.querySelector('.test-output');
+                    }
+                }
                 
-                const outputElement = event.target?.closest('.test-section')?.querySelector('.test-output');
+                // Fallback: find the most recent active test output
+                if (!outputElement) {
+                    const allOutputs = document.querySelectorAll('.test-output');
+                    allOutputs.forEach(output => {
+                        if (output.textContent.trim().length > 0) {
+                            outputElement = output;
+                        }
+                    });
+                }
+                
+                // Final fallback: use any test output
+                if (!outputElement) {
+                    outputElement = document.querySelector('.test-output');
+                }
+                
                 if (outputElement) {
                     const logEntry = document.createElement('div');
                     logEntry.className = `log-entry ${type}`;
@@ -301,9 +325,11 @@
                     outputElement.appendChild(logEntry);
                     outputElement.scrollTop = outputElement.scrollHeight;
                 }
-                
+            } catch (error) {
+                console.error('Logging error:', error);
                 console.log(`[${type.toUpperCase()}] ${entry}`);
             }
+        }
             
             updateStats() {
                 document.getElementById('cards-created').textContent = this.stats.cardsCreated;
@@ -434,12 +460,31 @@
             const container = document.getElementById('hardware-cards');
             const cards = container.querySelectorAll('.card-hardware');
             
-            cards.forEach((card, index) => {
+            cards.forEach((cardElement, index) => {
                 setTimeout(() => {
                     const animations = ['highlight', 'pulse', 'shake'];
                     const randomAnimation = animations[index % animations.length];
-                    card.animate(randomAnimation, { color: `hsl(${index * 60}, 100%, 50%)` });
-                    testFramework.stats.animationsRun++;
+                    
+                    try {
+                        // Try to use card instance animation if available
+                        const cardWrapper = cardElement.closest('.card-wrapper');
+                        if (cardWrapper && cardWrapper._cardInstance && typeof cardWrapper._cardInstance.animate === 'function') {
+                            cardWrapper._cardInstance.animate(randomAnimation, { 
+                                color: `hsl(${index * 60}, 100%, 50%)` 
+                            });
+                        } else {
+                            // Fallback: use CSS animations on DOM element
+                            cardElement.style.animation = `card-${randomAnimation} 600ms ease-in-out`;
+                            setTimeout(() => {
+                                cardElement.style.animation = '';
+                            }, 600);
+                        }
+                        
+                        testFramework.stats.animationsRun++;
+                    } catch (error) {
+                        console.error('Animation error:', error);
+                        testFramework.log(`Animation error: ${error.message}`, 'error');
+                    }
                 }, index * 200);
             });
         }
@@ -491,10 +536,26 @@
             const container = document.getElementById('program-cards');
             const cards = container.querySelectorAll('.card-program');
             
-            cards.forEach((card, index) => {
+            cards.forEach((cardElement, index) => {
                 setTimeout(() => {
-                    card.animate('bounceIn');
-                    testFramework.stats.animationsRun++;
+                    try {
+                        // Try to use card instance animation if available
+                        const cardWrapper = cardElement.closest('.card-wrapper');
+                        if (cardWrapper && cardWrapper._cardInstance && typeof cardWrapper._cardInstance.animate === 'function') {
+                            cardWrapper._cardInstance.animate('bounceIn');
+                        } else {
+                            // Fallback: use CSS animations on DOM element
+                            cardElement.style.animation = 'card-bounceIn 600ms ease-out';
+                            setTimeout(() => {
+                                cardElement.style.animation = '';
+                            }, 600);
+                        }
+                        
+                        testFramework.stats.animationsRun++;
+                    } catch (error) {
+                        console.error('Animation error:', error);
+                        testFramework.log(`Animation error: ${error.message}`, 'error');
+                    }
                 }, index * 150);
             });
         }
