@@ -15,11 +15,6 @@ body, td, th {
         font-size: 10pt;
         font-family: sans-serif;
 }
-
-* {
-        outline: none;
-        white-space: pre;
-}
 input[type=range]::-moz-focus-outer {
         border: 0;
 }
@@ -92,7 +87,6 @@ button:hover:not(:disabled) {
 
 .popupWrapper > * > * {
         margin: 0;
-        background: #bbb;
         padding: 1em;
         border: 0;
         box-shadow: none;
@@ -164,7 +158,12 @@ button:hover:not(:disabled) {
         border-radius: 0;
         border-bottom-width: 0;
 }
-
+.modern-ui {
+        background: #333;
+}
+.modern-ui > h2 {
+        background: repeating-linear-gradient(-55deg, #222, #332 5px, #332 5px, #222 10px);
+}
 
 #popup_homeview button {
         width: 28px;
@@ -639,6 +638,8 @@ button:hover:not(:disabled) {
 }
 
 .prog-btn {
+    width: auto;
+    height: auto;
     background: rgba(0, 255, 255, 0.2);
     border: 1px solid #0ff;
     border-radius: 3px;
@@ -667,7 +668,7 @@ button:hover:not(:disabled) {
 }
 
 .program-name-large {
-    font-size: 0.9em;
+    font-size: 1.2em;
     font-weight: bold;
     color: #fff;
     cursor: pointer;
@@ -679,7 +680,7 @@ button:hover:not(:disabled) {
     display: flex;
     gap: 12px;
     justify-content: center;
-    font-size: 0.75em;
+    font-size: 1.0em;
     margin-bottom: 4px;
 }
 

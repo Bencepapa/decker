@@ -13903,9 +13903,9 @@ onTrash: (programData, card) => {
 onDragStart: (e, programData, card) => {
                                                 console.log('All.js: Drag start detected');
                                                 // Store dragged element reference
-                                                window.draggedCard = { data: programData, element: card.element, index: card.options.index };
+window.draggedCard = { data: programData, element: card.element, index: card.options.index };
                                         },
-onDragOver: (e, programData, card) => {
+                                onDragOver: (e, programData, card) => {
                                                 e.preventDefault();
                                                 // Clear previous insertion indicators
                                                 document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
@@ -13916,39 +13916,55 @@ onDragOver: (e, programData, card) => {
                                                 
                                                 // Show insertion position
                                                 const rect = card.element.getBoundingClientRect();
-                                                const midPoint = rect.top + rect.height / 2;
+                                                const relativeY = e.clientY - rect.top;
+                                                const isTopHalf = relativeY < (rect.height / 2);
                                                 
-                                                if (e.clientY < midPoint) {
+                                                if (isTopHalf) {
                                                         // Insert before
                                                         card.element.style.borderTop = '3px solid #0ff';
+                                                        console.log(`Will insert before: ${programData.m_szName || card.getProgramName(programData)}`);
                                                 } else {
                                                         // Insert after
                                                         card.element.style.borderBottom = '3px solid #0ff';
+                                                        console.log(`Will insert after: ${programData.m_szName || card.getProgramName(programData)}`);
                                                 }
                                         },
 onDrop: (e, programData, card) => {
                                                 e.preventDefault();
-                                                console.log('All.js: Drop detected');
+                                                console.log('All.js: Drop detected on:', programData.m_szName || 'unknown');
+                                                console.log('Dragged card exists:', !!window.draggedCard);
+                                                console.log('Same element check:', window.draggedCard?.element === card.element);
                                                 
                                                 if (!window.draggedCard || window.draggedCard.element === card.element) {
+                                                        console.log('Invalid drop - returning early');
                                                         return; // Invalid drop
                                                 }
                                                 
-                                                // Perform array swap
                                                 const draggedIndex = window.draggedCard.index;
                                                 const targetIndex = card.options.index;
                                                 
+                                                // Determine insertion position based on mouse position
+                                                const rect = card.element.getBoundingClientRect();
+                                                const midPoint = rect.top + rect.height / 2;
+                                                const insertAfter = e.clientY >= midPoint;
+                                                
                                                 if (g_pChar && g_pChar.m_olSoftware) {
-                                                        // Insert dragged card before target card
-                                                        console.log(`Moving program from index ${draggedIndex} to before index ${targetIndex}`);
+                                                        // Insert dragged card before/after target card
+                                                        console.log(`Moving program from index ${draggedIndex} to ${insertAfter ? 'after' : 'before'} index ${targetIndex}`);
                                                         const draggedProgram = g_pChar.m_olSoftware[draggedIndex];
                                                         
                                                         // Remove from original position
                                                         g_pChar.m_olSoftware.splice(draggedIndex, 1);
                                                         
-                                                        // Insert at new position (before target)
-                                                        // Adjust target index if dragged was before target
-                                                        const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                                                        // Insert at new position
+                                                        let adjustedTargetIndex = targetIndex;
+                                                        if (draggedIndex < targetIndex) {
+                                                                adjustedTargetIndex = targetIndex - 1; // Adjust for splice
+                                                        }
+                                                        if (insertAfter) {
+                                                                adjustedTargetIndex += 1; // Insert after
+                                                        }
+                                                        
                                                         g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
                                                         
                                                         // Refresh grid
@@ -14323,41 +14339,76 @@ onDragEnd: (e, programData, card) => {
                                         console.log('All.js: Drag start detected');
                                         window.draggedCard = { data: programData, element: card.element, index: card.options.index };
                                 },
-                                onDragOver: (e, programData, card) => {
-                                        e.preventDefault();
-                                        card.element.style.border = '2px dashed #0ff';
-                                },
-                                onDrop: (e, programData, card) => {
-                                        e.preventDefault();
-                                        console.log('All.js: Drop detected');
-                                        
-                                        if (!window.draggedCard || window.draggedCard.element === card.element) {
-                                                return;
-                                        }
-                                        
-                                        const draggedIndex = window.draggedCard.index;
-                                        const targetIndex = card.options.index;
-                                        
-                                        if (g_pChar && g_pChar.m_olSoftware) {
-                                                // Insert dragged card before target card
-                                                const draggedProgram = g_pChar.m_olSoftware[draggedIndex];
+onDragOver: (e, programData, card) => {
+                                                e.preventDefault();
+                                                // Clear previous insertion indicators
+                                                document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
+                                                        el.style.border = '';
+                                                        el.style.borderTop = '';
+                                                        el.style.borderBottom = '';
+                                                });
                                                 
-                                                // Remove from original position
-                                                g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                                                // Show insertion position
+                                                const rect = card.element.getBoundingClientRect();
+                                                const relativeY = e.clientY - rect.top;
+                                                const isTopHalf = relativeY < (rect.height / 2);
                                                 
-                                                // Insert at new position (before target)
-                                                // Adjust target index if dragged was before target
-                                                const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-                                                g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                                                if (isTopHalf) {
+                                                        // Insert before
+                                                        card.element.style.borderTop = '3px solid #0ff';
+                                                        console.log(`Will insert before: ${programData.m_szName || card.getProgramName(programData)}`);
+                                                } else {
+                                                        // Insert after
+                                                        card.element.style.borderBottom = '3px solid #0ff';
+                                                        console.log(`Will insert after: ${programData.m_szName || card.getProgramName(programData)}`);
+                                                }
+                                        },
+onDrop: (e, programData, card) => {
+                                                e.preventDefault();
+                                                console.log('All.js: Drop detected');
                                                 
-                                                refreshProgramGrid();
-                                        }
-                                },
+                                                if (!window.draggedCard || window.draggedCard.element === card.element) {
+                                                        return;
+                                                }
+                                                
+                                                const draggedIndex = window.draggedCard.index;
+                                                const targetIndex = card.options.index;
+                                                
+                                                // Determine insertion position based on mouse position
+                                                const rect = card.element.getBoundingClientRect();
+                                                const midPoint = rect.top + rect.height / 2;
+                                                const insertAfter = e.clientY >= midPoint;
+                                                
+                                                if (g_pChar && g_pChar.m_olSoftware) {
+                                                        // Insert dragged card before/after target card
+                                                        console.log(`Moving program from index ${draggedIndex} to ${insertAfter ? 'after' : 'before'} index ${targetIndex}`);
+                                                        const draggedProgram = g_pChar.m_olSoftware[draggedIndex];
+                                                        
+                                                        // Remove from original position
+                                                        g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                                                        
+                                                        // Insert at new position
+                                                        let adjustedTargetIndex = targetIndex;
+                                                        if (draggedIndex < targetIndex) {
+                                                                adjustedTargetIndex = targetIndex - 1; // Adjust for splice
+                                                        }
+                                                        if (insertAfter) {
+                                                                adjustedTargetIndex += 1; // Insert after
+                                                        }
+                                                        
+                                                        g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                                                        
+                                                        refreshProgramGrid();
+                                                }
+                                        },
                                 onDragEnd: (e, programData, card) => {
                                         console.log('All.js: Drag end detected');
                                         window.draggedCard = null;
+                                        // Remove all visual feedback
                                         document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
                                                 el.style.border = '';
+                                                el.style.borderTop = '';
+                                                el.style.borderBottom = '';
                                         });
                                 }
                         });

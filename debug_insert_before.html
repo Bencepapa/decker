@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Insert-Before Issue</title>
+    <link rel="stylesheet" href="cards.css">
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .debug-panel {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .debug-info {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .debug-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        .debug-entry.info { color: #0ff; }
+        .debug-entry.success { color: #0f0; }
+        .debug-entry.error { color: #f00; }
+        .debug-entry.warning { color: #ff0; }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h2>🐛 Debug Insert-Before Issue</h2>
+        <p>Test insert-before vs insert-after behavior with detailed logging.</p>
+        
+        <div class="test-cards" id="test-cards"></div>
+        
+        <div class="debug-info" id="debug-info"></div>
+    </div>
+
+    <script src="cards.js"></script>
+    <script>
+        // Mock global variables
+        window.g_szProgramClassName = ['Attack', 'Shield', 'Virus'];
+        window.GetSoftwareText = (cls, rating) => `Test ${cls}-${rating}`;
+        window.GetProgramSize = (cls, rating) => (cls + 1) * (rating || 1) * 2;
+        
+        window.g_pChar = {
+            m_olSoftware: [
+                { m_nClass: 0, m_nRating: 1, m_nLoadedRating: 0, m_szName: 'Test Card A' },
+                { m_nClass: 1, m_nRating: 2, m_nLoadedRating: 0, m_szName: 'Test Card B' },
+                { m_nClass: 2, m_nRating: 1, m_nLoadedRating: 0, m_szName: 'Test Card C' }
+            ]
+        };
+
+        function debugLog(message, type = 'info') {
+            const debugInfo = document.getElementById('debug-info');
+            const entry = document.createElement('div');
+            entry.className = `debug-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugInfo.appendChild(entry);
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function createDebugCards() {
+            const container = document.getElementById('test-cards');
+            container.innerHTML = '';
+            
+            window.g_pChar.m_olSoftware.forEach((program, index) => {
+                const progCard = CardFactory.create('program', program, {
+                    index: index,
+                    onDragStart: (e, programData, card) => {
+                        debugLog(`🎯 DRAG START: ${programData.m_szName} (index ${card.options.index})`, 'info');
+                        window.draggedCard = { data: programData, element: card.element, index: card.options.index };
+                    },
+                    onDragOver: (e, programData, card) => {
+                        e.preventDefault();
+                        
+                        // Clear previous indicators
+                        document.querySelectorAll('.card-program').forEach(el => {
+                            el.style.border = '';
+                            el.style.borderTop = '';
+                            el.style.borderBottom = '';
+                        });
+                        
+                        // Calculate position
+                        const rect = card.element.getBoundingClientRect();
+                        const relativeY = e.clientY - rect.top;
+                        const isTopHalf = relativeY < (rect.height / 2);
+                        
+                        debugLog(`📍 DRAG OVER: ${programData.m_szName} | relativeY: ${relativeY.toFixed(1)} | height: ${rect.height.toFixed(1)} | isTopHalf: ${isTopHalf}`, 'info');
+                        
+                        if (isTopHalf) {
+                            card.element.style.borderTop = '3px solid #0ff';
+                            card.element.insertPosition = 'before';
+                        } else {
+                            card.element.style.borderBottom = '3px solid #0ff';
+                            card.element.insertPosition = 'after';
+                        }
+                    },
+                    onDrop: (e, programData, card) => {
+                        e.preventDefault();
+                        debugLog(`🎯 DROP: ${programData.m_szName} | insertPosition: ${card.element.insertPosition || 'unknown'}`, 'warning');
+                        
+                        if (!window.draggedCard || window.draggedCard.element === card.element) {
+                            debugLog('❌ Invalid drop - same card or no dragged card', 'error');
+                            return;
+                        }
+                        
+                        const draggedIndex = window.draggedCard.index;
+                        const targetIndex = card.options.index;
+                        const insertAfter = card.element.insertPosition === 'after';
+                        
+                        debugLog(`🔄 Moving from index ${draggedIndex} to ${insertAfter ? 'after' : 'before'} index ${targetIndex}`, 'success');
+                        
+                        // Perform the move
+                        const draggedProgram = window.g_pChar.m_olSoftware[draggedIndex];
+                        window.g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                        
+                        let adjustedTargetIndex = targetIndex;
+                        if (draggedIndex < targetIndex) {
+                            adjustedTargetIndex = targetIndex - 1;
+                        }
+                        if (insertAfter) {
+                            adjustedTargetIndex += 1;
+                        }
+                        
+                        window.g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                        
+                        debugLog(`✅ Result: ${JSON.stringify(window.g_pChar.m_olSoftware.map(p => p.m_szName))}`, 'success');
+                        
+                        // Refresh cards
+                        createDebugCards();
+                    },
+                    onDragEnd: (e, programData, card) => {
+                        debugLog('🏁 DRAG END', 'info');
+                        window.draggedCard = null;
+                        document.querySelectorAll('.card-program').forEach(el => {
+                            el.style.border = '';
+                            el.style.borderTop = '';
+                            el.style.borderBottom = '';
+                            el.insertPosition = undefined;
+                        });
+                    }
+                });
+                
+                const cardElement = progCard.createElement();
+                container.appendChild(cardElement);
+            });
+            
+            debugLog(`📋 Current array: ${JSON.stringify(window.g_pChar.m_olSoftware.map(p => p.m_szName))}`, 'success');
+        }
+
+        window.addEventListener('load', () => {
+            debugLog('🚀 Debug session started', 'success');
+            createDebugCards();
+        });
+    </script>
+</body>
+</html>
