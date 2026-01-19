@@ -520,15 +520,152 @@ button:hover:not(:disabled) {
 }
 
 #popup_modern_matrix {
-        background: #111;
-        color: #0f0;
-        font-family: 'Courier New', Courier, monospace;
-        border: 1px solid #0f0;
+    background: #050505;
+    color: #0f0;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 0;
+    overflow: hidden;
+    border: none;
 }
-#popup_modern_matrix .modern-titlebar button {
-        background: #900;
-        color: white;
-        border: 1px solid #f00;
+
+.modern-titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(0, 255, 0, 0.1);
+    border-bottom: 1px solid #0f0;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.modern-matrix-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.modern-matrix-status-top {
+    font-size: 0.9em;
+    color: #0f0;
+}
+
+.modern-matrix-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+#modern-map-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+}
+
+#modern-programs-section {
+    height: 150px;
+    background: #111;
+    border-top: 1px solid #0f0;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+}
+
+/* Landscape Mode */
+@media (orientation: landscape) {
+    .modern-matrix-content {
+        flex-direction: row;
+    }
+    #modern-programs-section {
+        width: 300px;
+        height: auto;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        border-top: none;
+        border-left: 1px solid #0f0;
+    }
+}
+
+.modern-matrix-program-card {
+    min-width: 140px;
+    height: 60px;
+    background: #222;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.modern-matrix-program-card:hover {
+    border-color: #0f0;
+    background: #333;
+}
+
+.modern-matrix-program-card.active {
+    border-color: #0f0;
+    background: rgba(0, 255, 0, 0.1);
+    box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);
+}
+
+.mini-prog-icon {
+    width: 24px;
+    height: 24px;
+    background-image: url(img/software.png);
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+}
+
+.mini-prog-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.mini-prog-name {
+    font-size: 0.8em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc;
+}
+
+.mini-prog-rating {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #0f0;
+}
+
+.modern-footer {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    background: #000;
+    flex-shrink: 0;
+}
+
+.modern-exit-btn {
+    background: #900 !important;
+    color: #fff !important;
+    border: 1px solid #f00 !important;
+    width: 200px !important;
+    font-weight: bold;
 }
 .contract-card {
         background: #222;
