@@ -17479,11 +17479,12 @@ function hosp_one() {
                         if (!g_pChar || !g_pChar.m_pSystem) return;
                         let sys = g_pChar.m_pSystem;
                         let alertColor = "#0f0";
-                        if (sys.m_nAlert === ALERT_YELLOW) alertColor = "#ff0";
-                        if (sys.m_nAlert === ALERT_RED) alertColor = "#f00";
+                        let alertString = "NORMAL";
+                        if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
+                        if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
 
                         txtSteps.innerHTML = `
-                                <span style="color: ${alertColor}">ALERT: ${sys.GetAlertString()}</span> | 
+                                <span style="color: ${alertColor}">ALERT: ${alertString}</span> | 
                                 <span>CPU: ${sys.m_pSystemCPU ? sys.m_pSystemCPU.m_szName : '---'}</span> | 
                                 <span>DECK: ${g_pChar.m_szDeckName}</span>
                         `;
@@ -17532,13 +17533,15 @@ function hosp_one() {
                         refreshPrograms();
 
                         // Initialize Map
-                        if (window.MatrixView) {
-                                // We need to ensure MatrixView can target our modern container
-                                // This might require a small change to MatrixView constructor or a separate instance
+                        if (typeof MatrixView !== 'undefined') {
                                 let mv = new MatrixView(mapContainer);
-                                if (pEntryNode !== null) {
+                                if (pEntryNode !== undefined && pEntryNode !== null) {
                                         DoEnterNode(pEntryNode, DIR_CENTER);
                                 }
+                                // The original MatrixView logic expects to be called from a different context
+                                // We need to ensure it draws.
+                                if (mv.Draw) mv.Draw();
+                                if (mv.RedrawWindow) mv.RedrawWindow();
                         }
                         
                         // Set up auto-refresh
@@ -17548,6 +17551,7 @@ function hosp_one() {
                                         return;
                                 }
                                 update();
+                                refreshPrograms();
                         }, 1000);
                 }
 
