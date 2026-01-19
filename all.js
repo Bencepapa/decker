@@ -13865,10 +13865,10 @@ Popup.create("homeview", obj).onInit(() => {
                                 const progCard = CardFactory.create('program', program, {
                                         index: index,
                                         onToggleLoad: (programData, card) => {
-                                                toggleProgramLoad(programData, card.element);
+                                                toggleProgramLoad(programData, card);
                                         },
                                         onToggleDefault: (programData, card) => {
-                                                toggleProgramDefault(programData, card.element);
+                                                toggleProgramDefault(programData, card);
                                         },
                                         onTrash: (programData, card) => {
                                                 trashProgram(programData, card.element);
@@ -13877,16 +13877,22 @@ Popup.create("homeview", obj).onInit(() => {
                                                 renameProgram(programData, card.element, card.element.querySelector('.clickable-name'));
                                         },
                                         onDragStart: (e, programData, card) => {
-                                                handleDragStart(e);
+                                                // Let CardFactory handle its own drag events
+                                                card.handleDragStart(e);
                                         },
                                         onDragOver: (e, programData, card) => {
-                                                handleDragOver(e);
+                                                // Let CardFactory handle its own drag events
+                                                card.handleDragOver(e);
                                         },
                                         onDrop: (e, programData, card) => {
-                                                handleDrop(e);
+                                                // Let CardFactory handle its own drag events
+                                                card.handleDrop(e);
+                                                // After drop, update the global software array
+                                                setTimeout(() => updateSoftwareArray(), 50); // Small delay to ensure DOM is updated
                                         },
                                         onDragEnd: (e, programData, card) => {
-                                                handleDragEnd(e);
+                                                // Let CardFactory handle its own drag events
+                                                card.handleDragEnd(e);
                                         }
                                 });
 
@@ -13981,38 +13987,10 @@ Popup.create("homeview", obj).onInit(() => {
                         </div>
                 `;
 
-                // Add drag and drop event listeners
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragover', handleDragOver);
-                card.addEventListener('drop', handleDrop);
-                card.addEventListener('dragend', handleDragEnd);
-
-                // Add event listeners
-                let loadBtn = card.querySelector('.load-btn');
-                let defaultBtn = card.querySelector('.default-btn');
-                let trashBtn = card.querySelector('.trash-btn');
-                let nameElement = card.querySelector('.clickable-name');
-
-                loadBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        toggleProgramLoad(program, card);
-                });
-
-                defaultBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        toggleProgramDefault(program, card);
-                });
-
-                trashBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        trashProgram(program, card);
-                });
-
-                nameElement.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        renameProgram(program, card, nameElement);
-                });
-
+        // Note: Event listeners are handled by CardFactory internally through the onToggleLoad, 
+        // onToggleDefault, onTrash, onRename callbacks above. Adding duplicate listeners 
+        // here would cause conflicts and multiple function calls.
+                
                 return card;
         }*/
 
@@ -14049,7 +14027,7 @@ Popup.create("homeview", obj).onInit(() => {
                 return positions[programClass] || "0 0";
         }
 
-        function toggleProgramLoad(program, cardElement) {
+        function toggleProgramLoad(program, card) {
                 if (!g_pChar) return;
                 
                 // Determine if program is currently loaded by checking m_nLoadedRating > 0
@@ -14072,15 +14050,26 @@ Popup.create("homeview", obj).onInit(() => {
                         program.m_nLoadedRating = program.m_nRating;
                         program.m_bLoadByDefault = true;
                         
-                        // Set active program references for the appropriate types
+                        // Set active program references for appropriate types
                         if (program.m_nClass === PROGRAM_ARMOR) g_pChar.m_pActiveArmor = program;
                         else if (program.m_nClass === PROGRAM_SHIELD) g_pChar.m_pActiveShield = program;
                         else if (program.m_nClass === PROGRAM_HIDE) g_pChar.m_pActiveHide = program;
                         else if (program.m_nClass === PROGRAM_SCAN) g_pChar.m_pActiveScan = program;
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pActiveReflect = program;
                         else if (program.m_nClass >= PROGRAM_ATTACK_BOOST && program.m_nClass <= PROGRAM_ANALYSIS_BOOST) g_pChar.m_pActiveBoost = program;
-}
+                }
+                
+                // Update load display
+                if (window.updateProgramLoadDisplay) {
+                        window.updateProgramLoadDisplay();
+                }
+                
+                // KEY FIX: Update card to re-render with new CSS classes
+                if (card && typeof card.update === 'function') {
+                        card.update(program);
+                }
         }
+
         
         function toggleProgramDefault(program, card) {
                 if (!g_pChar) return;
@@ -14108,14 +14097,14 @@ Popup.create("homeview", obj).onInit(() => {
                         else if (program.m_nClass === PROGRAM_REFLECT) g_pChar.m_pDefReflect = program;
                 }
 
-                // Refresh the card
-                let index = parseInt(card.dataset.index);
-                let newCard = createProgramCard(program, index);
-                card.parentNode.replaceChild(newCard, card);
+                // KEY FIX: Update card to re-render with new CSS classes instead of recreating
+                if (card && typeof card.update === 'function') {
+                        card.update(program);
+                }
         }
 
 
-        function trashProgram(program, card) {
+        function trashProgram(program, cardElement) {
                 if (!g_pChar) return;
                 
                 // Use Popup.confirm for confirmation
@@ -14140,8 +14129,10 @@ Popup.create("homeview", obj).onInit(() => {
                                 g_pChar.m_olSoftware.splice(index, 1);
                         }
                         
-                        // Remove card from DOM
-                        card.remove();
+                        // Remove card from DOM with animation if possible
+                        if (cardElement && cardElement.remove) {
+                                cardElement.remove();
+                        }
                         
                         // Update load display
                         if (window.updateProgramLoadDisplay) {
@@ -14150,7 +14141,7 @@ Popup.create("homeview", obj).onInit(() => {
                 });
         }
 
-        function renameProgram(program, card, nameElement) {
+        function renameProgram(program, cardElement, nameElement) {
                 if (!g_pChar) return;
                 
                 // Open deckname popup with current name
@@ -14161,11 +14152,17 @@ Popup.create("homeview", obj).onInit(() => {
                                 
                                 // Update the display
                                 nameElement.textContent = newName.trim();
+                                
+                                // Also update the program info display if it exists
+                                const programTypeElement = cardElement.querySelector('.program-type-rating');
+                                if (programTypeElement) {
+                                        programTypeElement.textContent = `(${g_szProgramClassName[program.m_nClass]} ${program.m_nRating})`;
+                                }
                         }
                 });
         }
 
-// Drag and drop functionality
+        // Drag and drop functionality
         let draggedElement = null;
 
         function handleDragStart(e) {
@@ -14226,15 +14223,32 @@ Popup.create("homeview", obj).onInit(() => {
                 }
         }
 
-/*                // Swap programs in array
-                let temp = g_pChar.m_olSoftware[draggedIndex];
-                g_pChar.m_olSoftware[draggedIndex] = g_pChar.m_olSoftware[targetIndex];
-                g_pChar.m_olSoftware[targetIndex] = temp;
+        // Helper function to update software array based on current DOM order after CardFactory drag operations
+        function updateSoftwareArray() {
+                if (!g_pChar || !g_pChar.m_olSoftware) return;
+                
+                const programCards = document.querySelectorAll('#popup_modern_deckview .card-program');
+                const newOrder = [];
+                
+                programCards.forEach((cardElement, index) => {
+                        const cardIndex = parseInt(cardElement.dataset.index);
+                        if (cardIndex >= 0 && cardIndex < g_pChar.m_olSoftware.length) {
+                                newOrder.push(g_pChar.m_olSoftware[cardIndex]);
+                        }
+                });
+                
+                // Update the software array with new order
+                if (newOrder.length === g_pChar.m_olSoftware.length) {
+                        g_pChar.m_olSoftware = newOrder;
+                        
+                        // Update load display
+                        if (window.updateProgramLoadDisplay) {
+                                window.updateProgramLoadDisplay();
+                        }
+                }
+        }
 
-// Refresh display
-                if (typeof renderCards === 'function') {
-                        renderCards();
-                }*/
+
 }
 
 

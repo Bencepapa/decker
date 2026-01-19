@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load/Unload Fix Test</title>
+    <link rel="stylesheet" href="cards.css">
+    <link rel="stylesheet" href="all.css">
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #0f0;
+        }
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background: #222;
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            padding: 20px;
+        }
+        .log-output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        .log-entry.success {
+            color: #0f0;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        .log-entry.error {
+            color: #f00;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        .log-entry.info {
+            color: #0ff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>Load/Unload State Fix Test</h1>
+            <p>Testing that load/unload properly updates CSS classes and button text</p>
+        </div>
+        <button onclick="openDeckView()" style="background: #0f0; color: #000; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer;">
+            Open Deck View
+        </button>
+        <div id="log-output" class="log-output"></div>
+    </div>
+
+    <script src="cards.js"></script>
+    <script>
+        // Mock game data
+        window.g_pChar = {
+            m_olSoftware: [
+                { m_nClass: 0, m_nRating: 3, m_nLoadedRating: 3, m_szName: "Loaded Attack" },
+                { m_nClass: 8, m_nRating: 2, m_nLoadedRating: 0, m_szName: "Unloaded Shield" },
+                { m_nClass: 12, m_nRating: 4, m_nLoadedRating: 4, m_szName: "Default Armor" }
+            ],
+            m_pDefArmorProgram: null,
+            GetLoadRatings: () => [10, 30, 50],
+            m_nCurrentLoad: 5
+        };
+
+        // Mock constants
+        window.g_szProgramClassName = ['Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence'];
+        window.GetSoftwareText = (cls, rating) => `Program ${cls} (R${rating})`;
+        window.GetProgramSize = (cls, rating) => (cls + 1) * rating;
+
+        // Mock Popup system
+        window.Popup = {
+            close: () => {
+                const overlay = document.querySelector('.popup-overlay');
+                if (overlay) overlay.remove();
+                log('Popup closed', 'info');
+            },
+            deckname: (currentName) => ({
+                then: (callback) => {
+                    const newName = prompt('Enter new program name:', currentName || '');
+                    callback(newName);
+                }
+            }),
+            confirm: (message) => ({
+                onYes: (callback) => {
+                    if (confirm(message)) {
+                        callback();
+                    }
+                }
+            })
+        };
+
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('log-output');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logOutput.appendChild(entry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function openDeckView() {
+            // Simulate deck view with program cards
+            const container = document.createElement('div');
+            container.className = 'card-container';
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+            container.style.gap = '12px';
+
+            g_pChar.m_olSoftware.forEach((program, index) => {
+                const card = CardFactory.create('program', program, {
+                    index: index,
+                    onToggleLoad: (programData, card) => {
+                        log(`Toggle load: ${GetSoftwareText(programData.m_nClass, programData.m_nRating)} - New state: ${programData.m_nLoadedRating > 0 ? 'LOADED' : 'UNLOADED'}`, 'success');
+                        // This should trigger card.update() and apply CSS classes
+                        if (typeof card.update === 'function') {
+                            card.update(programData);
+                            log(`Card update called, CSS classes should now be applied`, 'info');
+                        } else {
+                            log(`ERROR: card.update is not a function`, 'error');
+                        }
+                    },
+                    onRename: (programData, card) => {
+                        log(`Rename requested for: ${GetSoftwareText(programData.m_nClass, programData.m_nRating)}`, 'info');
+                    },
+                    onTrash: (programData, card) => {
+                        log(`Trash requested for: ${GetSoftwareText(programData.m_nClass, programData.m_nRating)}`, 'info');
+                    }
+                });
+
+                const cardElement = card.createElement();
+                container.appendChild(cardElement);
+            });
+
+            // Create popup overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'popup-overlay';
+            
+            const popup = document.createElement('div');
+            popup.className = 'popup-content';
+            popup.innerHTML = `
+                <h2 style="color: #0f0; margin-bottom: 20px;">Program Load/Unload Test</h2>
+                <p style="color: #aaa;">Click the Load/Unload buttons on program cards to test state changes.</p>
+                <p style="color: #aaa;">Expected behavior:</p>
+                <ul style="color: #aaa; margin-left: 20px;">
+                    <li>Loaded cards should have darker background (card-loaded class)</li>
+                    <li>Default cards should have yellow border (card-default class)</li>
+                    <li>Button text should toggle between "Load" and "Unload"</li>
+                    <li>CSS classes should be applied immediately on toggle</li>
+                </ul>
+                <button onclick="Popup.close()" style="background: #f00; color: #fff; border: none; padding: 8px 16px; margin-top: 20px; cursor: pointer;">
+                    Close Test
+                </button>
+            `;
+            
+            popup.appendChild(container);
+            overlay.appendChild(popup);
+            document.body.appendChild(overlay);
+
+            log('Test deck view opened - test load/unload functionality', 'info');
+        }
+    </script>
+</body>
+</html>
