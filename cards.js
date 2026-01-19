@@ -512,6 +512,13 @@ class ProgramCard extends BaseCard {
         
         // Drag & drop events
         if (this.options.draggable !== false) {
+            // Ensure drag events don't bubble to prevent conflicts
+            ['dragstart', 'dragover', 'drop', 'dragend'].forEach(eventType => {
+                this.element.addEventListener(eventType, (e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                });
+            });
+            
             this.element.addEventListener('dragstart', this.dragHandlers.start);
             this.element.addEventListener('dragover', this.dragHandlers.over);
             this.element.addEventListener('drop', this.dragHandlers.drop);
@@ -557,14 +564,22 @@ class ProgramCard extends BaseCard {
     }
     
     handleDragStart(e) {
+        console.log('Drag Start:', this.data);
+        this.element.classList.add('dragging');
+        // Set drag data for HTML5 API
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.options.index);
+        // Call callback for data handling, but don't call back to card methods
         if (this.options.onDragStart) {
-            this.element.classList.add('dragging');
             this.options.onDragStart(e, this.data, this);
         }
     }
     
     handleDragOver(e) {
         e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        console.log('Drag Over:', this.data);
+        // Call callback for visual feedback only
         if (this.options.onDragOver) {
             this.options.onDragOver(e, this.data, this);
         }
@@ -572,14 +587,18 @@ class ProgramCard extends BaseCard {
     
     handleDrop(e) {
         e.preventDefault();
+        console.log('Drop on:', this.data);
+        // Call callback for data handling only
         if (this.options.onDrop) {
             this.options.onDrop(e, this.data, this);
         }
     }
     
     handleDragEnd(e) {
+        console.log('Drag End:', this.data);
+        this.element.classList.remove('dragging');
+        // Call callback for cleanup only
         if (this.options.onDragEnd) {
-            this.element.classList.remove('dragging');
             this.options.onDragEnd(e, this.data, this);
         }
     }

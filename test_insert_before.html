@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insert-Before Drag & Drop Test</title>
+    <link rel="stylesheet" href="cards.css">
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-container {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #0f0;
+            margin-bottom: 15px;
+        }
+        .instructions {
+            background: #333;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 16px;
+            border: 2px dashed #444;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+        .array-display {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .array-item {
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 3px;
+            padding: 5px 8px;
+            margin: 2px;
+            display: inline-block;
+        }
+        .instructions code {
+            color: #0ff;
+            background: #222;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2 class="test-title">🎯 Insert-Before Drag & Drop Test</h2>
+        
+        <div class="instructions">
+            <p><strong>How to test:</strong></p>
+            <ul>
+                <li>Drag <strong>Card 3</strong> to the <strong>top half</strong> of <strong>Card 1</strong> → Card 3 should move to position 0</li>
+                <li>Drag <strong>Card 1</strong> to the <strong>bottom half</strong> of <strong>Card 4</strong> → Card 1 should move after Card 4</li>
+                <li><code>border-top: cyan</code> = Insert before | <code>border-bottom: cyan</code> = Insert after</li>
+            </ul>
+        </div>
+        
+        <div class="card-container" id="test-container"></div>
+        
+        <div class="array-display" id="array-display">
+            <strong>Current Array Order:</strong>
+            <div id="array-items"></div>
+        </div>
+    </div>
+
+    <script src="cards.js"></script>
+    <script>
+        // Mock global variables
+        window.g_szProgramClassName = [
+            'Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence', 
+            'Confuse', 'Weaken', 'Shield', 'Smoke', 'Decoy', 'Medic', 
+            'Armor', 'Hide', 'Deceive', 'Relocate'
+        ];
+        
+        window.GetSoftwareText = (cls, rating) => {
+            const names = ['Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence'];
+            return `${names[cls] || 'Unknown'} ${rating}`;
+        };
+        
+        window.GetProgramSize = (cls, rating) => {
+            return Math.floor((cls + 1) * (rating || 1) * 1.5);
+        };
+        
+        window.g_pChar = {
+            m_olSoftware: [
+                { m_nClass: 0, m_nRating: 1, m_nLoadedRating: 0, m_szName: 'Card 1' },
+                { m_nClass: 8, m_nRating: 2, m_nLoadedRating: 0, m_szName: 'Card 2' },
+                { m_nClass: 12, m_nRating: 3, m_nLoadedRating: 0, m_szName: 'Card 3' },
+                { m_nClass: 9, m_nRating: 1, m_nLoadedRating: 0, m_szName: 'Card 4' },
+                { m_nClass: 4, m_nRating: 2, m_nLoadedRating: 0, m_szName: 'Card 5' }
+            ]
+        };
+
+        // Update array display
+        function updateArrayDisplay() {
+            const container = document.getElementById('array-items');
+            container.innerHTML = '';
+            
+            window.g_pChar.m_olSoftware.forEach((program, index) => {
+                const item = document.createElement('span');
+                item.className = 'array-item';
+                item.textContent = `[${index}] ${program.m_szName}`;
+                item.style.background = program.m_nClass % 2 === 0 ? '#444' : '#555';
+                container.appendChild(item);
+            });
+        }
+
+        // Test container setup
+        const container = document.getElementById('test-container');
+        
+        // Setup container as drop zone
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        // Create test cards
+        function createTestCards() {
+            container.innerHTML = '';
+            
+            window.g_pChar.m_olSoftware.forEach((program, index) => {
+                const progCard = CardFactory.create('program', program, {
+                    index: index,
+                    onDragStart: (e, programData, card) => {
+                        console.log(`Drag start: ${programData.m_szName} (index ${card.options.index})`);
+                        window.draggedCard = { data: programData, element: card.element, index: card.options.index };
+                    },
+                    onDragOver: (e, programData, card) => {
+                        e.preventDefault();
+                        // Clear previous insertion indicators
+                        document.querySelectorAll('.card-program').forEach(el => {
+                            el.style.border = '';
+                            el.style.borderTop = '';
+                            el.style.borderBottom = '';
+                        });
+                        
+                        // Show insertion position
+                        const rect = card.element.getBoundingClientRect();
+                        const midPoint = rect.top + rect.height / 2;
+                        
+                        if (e.clientY < midPoint) {
+                            // Insert before
+                            card.element.style.borderTop = '3px solid #0ff';
+                            console.log(`Will insert before: ${programData.m_szName}`);
+                        } else {
+                            // Insert after
+                            card.element.style.borderBottom = '3px solid #0ff';
+                            console.log(`Will insert after: ${programData.m_szName}`);
+                        }
+                    },
+                    onDrop: (e, programData, card) => {
+                        e.preventDefault();
+                        console.log(`Drop on: ${programData.m_szName}`);
+                        
+                        if (!window.draggedCard || window.draggedCard.element === card.element) {
+                            console.log('Invalid drop - same card or no dragged card');
+                            return;
+                        }
+                        
+                        const draggedIndex = window.draggedCard.index;
+                        const targetIndex = card.options.index;
+                        
+                        // Determine insertion position
+                        const rect = card.element.getBoundingClientRect();
+                        const midPoint = rect.top + rect.height / 2;
+                        const insertAfter = e.clientY >= midPoint;
+                        
+                        console.log(`Moving card from index ${draggedIndex} to ${insertAfter ? 'after' : 'before'} index ${targetIndex}`);
+                        
+                        // Insert dragged card before/after target card
+                        const draggedProgram = window.g_pChar.m_olSoftware[draggedIndex];
+                        
+                        // Remove from original position
+                        window.g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                        
+                        // Insert at new position
+                        let adjustedTargetIndex = targetIndex;
+                        if (draggedIndex < targetIndex) {
+                            adjustedTargetIndex = targetIndex - 1; // Adjust for splice
+                        }
+                        if (insertAfter) {
+                            adjustedTargetIndex += 1; // Insert after
+                        }
+                        
+                        window.g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                        
+                        // Refresh grid and display
+                        createTestCards();
+                        updateArrayDisplay();
+                    },
+                    onDragEnd: (e, programData, card) => {
+                        console.log('Drag end detected');
+                        window.draggedCard = null;
+                        // Remove all visual feedback
+                        document.querySelectorAll('.card-program').forEach(el => {
+                            el.style.border = '';
+                            el.style.borderTop = '';
+                            el.style.borderBottom = '';
+                        });
+                    }
+                });
+                
+                const cardElement = progCard.createElement();
+                container.appendChild(cardElement);
+            });
+            
+            updateArrayDisplay();
+        }
+
+        // Initialize test
+        window.addEventListener('load', () => {
+            console.log('Insert-Before Drag & Drop Test loaded');
+            createTestCards();
+        });
+    </script>
+</body>
+</html>

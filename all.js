@@ -13852,13 +13852,25 @@ Popup.create("homeview", obj).onInit(() => {
                         sectionHeader.style.color = "#0ff";
                         container.appendChild(sectionHeader);
 
-                        // Create program cards container for drag-drop
+// Create program cards container for drag-drop
                         let programContainer = document.createElement("div");
                         programContainer.style.gridColumn = "1 / -1";
                         programContainer.style.display = "grid";
                         programContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
                         programContainer.style.gridGap = "18px";
                         container.appendChild(programContainer);
+
+                        // Setup program container as drop zone
+                        programContainer.addEventListener('dragover', (e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                        });
+
+                        programContainer.addEventListener('drop', (e) => {
+                                e.preventDefault();
+                                console.log('Container drop detected');
+                                // Handle container-level drops if needed
+                        });
 
                         // Render program cards using new card system
                         (g_pChar.m_olSoftware || []).forEach((program, index) => {
@@ -13870,29 +13882,89 @@ Popup.create("homeview", obj).onInit(() => {
                                         onToggleDefault: (programData, card) => {
                                                 toggleProgramDefault(programData, card);
                                         },
-                                        onTrash: (programData, card) => {
-                                                trashProgram(programData, card.element);
+onTrash: (programData, card) => {
+                                                if (confirm('Trash this program?')) {
+                                                        // Remove from array
+                                                        const index = card.options.index;
+                                                        if (g_pChar && g_pChar.m_olSoftware) {
+                                                                g_pChar.m_olSoftware.splice(index, 1);
+                                                                
+                                                                // Animate removal
+                                                                card.animate('shake', () => {
+                                                                        // Refresh grid after animation
+                                                                        refreshProgramGrid();
+                                                                });
+                                                        }
+                                                }
                                         },
                                         onRename: (programData, card) => {
                                                 renameProgram(programData, card.element, card.element.querySelector('.clickable-name'));
                                         },
-                                        onDragStart: (e, programData, card) => {
-                                                // Let CardFactory handle its own drag events
-                                                card.handleDragStart(e);
+onDragStart: (e, programData, card) => {
+                                                console.log('All.js: Drag start detected');
+                                                // Store dragged element reference
+                                                window.draggedCard = { data: programData, element: card.element, index: card.options.index };
                                         },
-                                        onDragOver: (e, programData, card) => {
-                                                // Let CardFactory handle its own drag events
-                                                card.handleDragOver(e);
+onDragOver: (e, programData, card) => {
+                                                e.preventDefault();
+                                                // Clear previous insertion indicators
+                                                document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
+                                                        el.style.border = '';
+                                                        el.style.borderTop = '';
+                                                        el.style.borderBottom = '';
+                                                });
+                                                
+                                                // Show insertion position
+                                                const rect = card.element.getBoundingClientRect();
+                                                const midPoint = rect.top + rect.height / 2;
+                                                
+                                                if (e.clientY < midPoint) {
+                                                        // Insert before
+                                                        card.element.style.borderTop = '3px solid #0ff';
+                                                } else {
+                                                        // Insert after
+                                                        card.element.style.borderBottom = '3px solid #0ff';
+                                                }
                                         },
-                                        onDrop: (e, programData, card) => {
-                                                // Let CardFactory handle its own drag events
-                                                card.handleDrop(e);
-                                                // After drop, update the global software array
-                                                setTimeout(() => updateSoftwareArray(), 50); // Small delay to ensure DOM is updated
+onDrop: (e, programData, card) => {
+                                                e.preventDefault();
+                                                console.log('All.js: Drop detected');
+                                                
+                                                if (!window.draggedCard || window.draggedCard.element === card.element) {
+                                                        return; // Invalid drop
+                                                }
+                                                
+                                                // Perform array swap
+                                                const draggedIndex = window.draggedCard.index;
+                                                const targetIndex = card.options.index;
+                                                
+                                                if (g_pChar && g_pChar.m_olSoftware) {
+                                                        // Insert dragged card before target card
+                                                        console.log(`Moving program from index ${draggedIndex} to before index ${targetIndex}`);
+                                                        const draggedProgram = g_pChar.m_olSoftware[draggedIndex];
+                                                        
+                                                        // Remove from original position
+                                                        g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                                                        
+                                                        // Insert at new position (before target)
+                                                        // Adjust target index if dragged was before target
+                                                        const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                                                        g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                                                        
+                                                        // Refresh grid
+                                                        refreshProgramGrid();
+                                                }
                                         },
-                                        onDragEnd: (e, programData, card) => {
-                                                // Let CardFactory handle its own drag events
-                                                card.handleDragEnd(e);
+onDragEnd: (e, programData, card) => {
+                                                console.log('All.js: Drag end detected');
+                                                // Clean up
+                                                window.draggedCard = null;
+                                                // Remove all visual feedback
+                                                document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
+                                                        el.style.border = '';
+                                                        el.style.borderTop = '';
+                                                        el.style.borderBottom = '';
+                                                });
                                         }
                                 });
 
@@ -14220,6 +14292,83 @@ Popup.create("homeview", obj).onInit(() => {
                 if (draggedElement) {
                         draggedElement.style.opacity = '1';
                         draggedElement = null;
+                }
+        }
+
+// Helper function to refresh the program grid
+        function refreshProgramGrid() {
+                const container = document.querySelector('#popup_modern_deckview .card-container');
+                if (!container) return;
+                
+                // Clear and rebuild
+                container.innerHTML = '';
+                
+                // Recreate all cards with updated indices
+                (g_pChar.m_olSoftware || []).forEach((program, index) => {
+                        const progCard = CardFactory.create('program', program, {
+                                index: index,
+                                onToggleLoad: (programData, card) => {
+                                        toggleProgramLoad(programData, card);
+                                },
+                                onToggleDefault: (programData, card) => {
+                                        toggleProgramDefault(programData, card);
+                                },
+                                onTrash: (programData, card) => {
+                                        trashProgram(programData, card.element);
+                                },
+                                onRename: (programData, card) => {
+                                        renameProgram(programData, card.element, card.element.querySelector('.clickable-name'));
+                                },
+                                onDragStart: (e, programData, card) => {
+                                        console.log('All.js: Drag start detected');
+                                        window.draggedCard = { data: programData, element: card.element, index: card.options.index };
+                                },
+                                onDragOver: (e, programData, card) => {
+                                        e.preventDefault();
+                                        card.element.style.border = '2px dashed #0ff';
+                                },
+                                onDrop: (e, programData, card) => {
+                                        e.preventDefault();
+                                        console.log('All.js: Drop detected');
+                                        
+                                        if (!window.draggedCard || window.draggedCard.element === card.element) {
+                                                return;
+                                        }
+                                        
+                                        const draggedIndex = window.draggedCard.index;
+                                        const targetIndex = card.options.index;
+                                        
+                                        if (g_pChar && g_pChar.m_olSoftware) {
+                                                // Insert dragged card before target card
+                                                const draggedProgram = g_pChar.m_olSoftware[draggedIndex];
+                                                
+                                                // Remove from original position
+                                                g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                                                
+                                                // Insert at new position (before target)
+                                                // Adjust target index if dragged was before target
+                                                const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                                                g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                                                
+                                                refreshProgramGrid();
+                                        }
+                                },
+                                onDragEnd: (e, programData, card) => {
+                                        console.log('All.js: Drag end detected');
+                                        window.draggedCard = null;
+                                        document.querySelectorAll('#popup_modern_deckview .card-program').forEach(el => {
+                                                el.style.border = '';
+                                        });
+                                }
+                        });
+                        
+                        const cardElement = progCard.createElement();
+                        container.appendChild(cardElement);
+                });
+                
+                // Update load display
+                if (window.updateProgramLoadDisplay) {
+                        window.updateProgramLoadDisplay();
                 }
         }
 

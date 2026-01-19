@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Fix Test</title>
+    <link rel="stylesheet" href="cards.css">
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-container {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #0f0;
+            margin-bottom: 15px;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 16px;
+            border: 2px dashed #444;
+            border-radius: 8px;
+            min-height: 200px;
+        }
+        .card-container.drag-over {
+            border-color: #0ff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        .status {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        .log-entry.info { color: #0ff; }
+        .log-entry.success { color: #0f0; }
+        .log-entry.error { color: #f00; }
+        .log-entry.warning { color: #ff0; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2 class="test-title">🎯 Drag & Drop Fix Test</h2>
+        <p>Test the fixed drag and drop functionality. Try dragging cards to reorder them.</p>
+        
+        <div class="card-container" id="test-container"></div>
+        
+        <div class="status" id="status"></div>
+    </div>
+
+    <script src="cards.js"></script>
+    <script>
+        // Mock global variables
+        window.g_szProgramClassName = [
+            'Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence', 
+            'Confuse', 'Weaken', 'Shield', 'Smoke', 'Decoy', 'Medic', 
+            'Armor', 'Hide', 'Deceive', 'Relocate'
+        ];
+        
+        window.GetSoftwareText = (cls, rating) => {
+            const names = ['Attack', 'Attack+', 'Attack++', 'Slow', 'Virus', 'Silence'];
+            return `${names[cls] || 'Unknown'} ${rating}`;
+        };
+        
+        window.GetProgramSize = (cls, rating) => {
+            return Math.floor((cls + 1) * (rating || 1) * 1.5);
+        };
+        
+        window.g_pChar = {
+            m_olSoftware: [
+                { m_nClass: 0, m_nRating: 3, m_nLoadedRating: 3, m_szName: 'Test Attack' },
+                { m_nClass: 8, m_nRating: 2, m_nLoadedRating: 0, m_szName: '' },
+                { m_nClass: 12, m_nRating: 4, m_nLoadedRating: 4, m_szName: 'Mega Shield' },
+                { m_nClass: 9, m_nRating: 1, m_nLoadedRating: 0, m_szName: '' }
+            ]
+        };
+
+        // Test logging
+        function log(message, type = 'info') {
+            const status = document.getElementById('status');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            status.appendChild(entry);
+            status.scrollTop = status.scrollHeight;
+        }
+
+        // Test container setup
+        const container = document.getElementById('test-container');
+        
+        // Setup container as drop zone
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            container.classList.add('drag-over');
+            log('Container: drag over detected', 'info');
+        });
+
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            container.classList.remove('drag-over');
+            log('Container: drop detected', 'info');
+        });
+
+        container.addEventListener('dragleave', (e) => {
+            container.classList.remove('drag-over');
+        });
+
+        // Create test cards
+        function createTestCards() {
+            container.innerHTML = '';
+            
+            window.g_pChar.m_olSoftware.forEach((program, index) => {
+                const progCard = CardFactory.create('program', program, {
+                    index: index,
+                    onDragStart: (e, programData, card) => {
+                        log(`Drag start: ${card.getProgramName(programData)} (index ${card.options.index})`, 'info');
+                        window.draggedCard = { data: programData, element: card.element, index: card.options.index };
+                    },
+                    onDragOver: (e, programData, card) => {
+                        e.preventDefault();
+                        // Clear previous insertion indicators
+                        document.querySelectorAll('.card-program').forEach(el => {
+                                el.style.border = '';
+                                el.style.borderTop = '';
+                                el.style.borderBottom = '';
+                        });
+                        
+                        // Show insertion position
+                        const rect = card.element.getBoundingClientRect();
+                        const midPoint = rect.top + rect.height / 2;
+                        
+                        if (e.clientY < midPoint) {
+                                // Insert before
+                                card.element.style.borderTop = '3px solid #0ff';
+                        } else {
+                                // Insert after
+                                card.element.style.borderBottom = '3px solid #0ff';
+                        }
+                        
+                        log(`Drag over: ${card.getProgramName(programData)}`, 'info');
+                    },
+                    onDrop: (e, programData, card) => {
+                        e.preventDefault();
+                        log(`Drop on: ${card.getProgramName(programData)}`, 'success');
+                        
+                        if (!window.draggedCard || window.draggedCard.element === card.element) {
+                            log('Invalid drop - same card or no dragged card', 'warning');
+                            return;
+                        }
+                        
+                        const draggedIndex = window.draggedCard.index;
+                        const targetIndex = card.options.index;
+                        
+                        log(`Moving card from index ${draggedIndex} to before index ${targetIndex}`, 'success');
+                        
+                        // Insert dragged card before target card
+                        const draggedProgram = window.g_pChar.m_olSoftware[draggedIndex];
+                        
+                        // Remove from original position
+                        window.g_pChar.m_olSoftware.splice(draggedIndex, 1);
+                        
+                        // Insert at new position (before target)
+                        // Adjust target index if dragged was before target
+                        const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                        window.g_pChar.m_olSoftware.splice(adjustedTargetIndex, 0, draggedProgram);
+                        
+                        // Refresh grid
+                        createTestCards();
+                    },
+                    onDragEnd: (e, programData, card) => {
+                        log('Drag end detected', 'info');
+                        window.draggedCard = null;
+                        // Remove all visual feedback
+                        document.querySelectorAll('.card-program').forEach(el => {
+                            el.style.border = '';
+                            el.style.borderTop = '';
+                            el.style.borderBottom = '';
+                        });
+                    },
+                    onToggleLoad: (programData, card) => {
+                        log(`Toggle load: ${card.getProgramName(programData)}`, 'info');
+                        programData.m_nLoadedRating = programData.m_nLoadedRating > 0 ? 0 : programData.m_nRating;
+                        card.update(programData);
+                    },
+                    onTrash: (programData, card) => {
+                        if (confirm(`Trash ${card.getProgramName(programData)}?`)) {
+                            log(`Trashing: ${card.getProgramName(programData)}`, 'warning');
+                            const index = card.options.index;
+                            window.g_pChar.m_olSoftware.splice(index, 1);
+                            createTestCards();
+                        }
+                    }
+                });
+                
+                const cardElement = progCard.createElement();
+                container.appendChild(cardElement);
+            });
+            
+            log(`Created ${window.g_pChar.m_olSoftware.length} program cards`, 'success');
+        }
+
+        // Initialize test
+        window.addEventListener('load', () => {
+            log('Drag & Drop Fix Test loaded', 'success');
+            createTestCards();
+        });
+    </script>
+</body>
+</html>
