@@ -17406,16 +17406,16 @@ function hosp_one() {
 
 
 
-        Popup.create("matrix", obj).onInit(Initialize).onKey({null:OnKeyPress});
+                Popup.create("matrix", obj).onInit(Initialize).onKey({null:OnKeyPress});
 
-        function Initialize(pEntryNode) {
-                if (Config.m_bModernMatrix) {
-                        Popup.closeAll();
-                        Popup.modern_matrix(pEntryNode);
-                        return;
-                }
-                // Clean stuff
-                Anim.clear();
+                function Initialize(pEntryNode) {
+                        if (Config.m_bModernUI) {
+                                Popup.closeAll();
+                                Popup.modern_matrix(pEntryNode);
+                                return;
+                        }
+                        // Clean stuff
+                        Anim.clear();
                 MV.l_tProgramList.clear();
                 MatrixButton.setMode(null, true);
 
