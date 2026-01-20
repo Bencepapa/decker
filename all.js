@@ -16188,15 +16188,38 @@ function do_purchase(pItem, callback) {
                 hospitalTime5.textContent = "Time: " + Math.ceil(l_nBaseTime/2) + " days";
                 hospitalTimeAll.textContent = "Time: " + Math.ceil(l_nFullTime/2) + " days";
                 
-                // Update cost displays
+// Update cost displays with color based on affordability
+                const canAffordBase = g_pChar.m_nCredits >= l_nBaseHospCost;
+                const canAffordFull = g_pChar.m_nCredits >= l_nFullHospCost;
+                
                 hospitalCost5.textContent = l_nBaseHospCost + " credits";
+                hospitalCost5.style.color = canAffordBase ? "#ff0" : "#f00";
+                
                 hospitalCostAll.textContent = l_nFullHospCost + " credits";
+                hospitalCostAll.style.color = canAffordFull ? "#ff0" : "#f00";
 
                 // Enable/disable controls
                 btnHomeHeal5.disabled = (nDamage === 0); // home heal
                 btnHomeHealAll.disabled = (nDamage === 0); // home heal all
-                btnHospHeal5.disabled = ((nDamage === 0) || (g_pChar.m_nCredits < l_nBaseHospCost)); // hospital heal
-                btnHospHealAll.disabled = ((nDamage === 0) || (g_pChar.m_nCredits < l_nFullHospCost)); // hospital heal all
+                btnHospHeal5.disabled = ((nDamage === 0) || (!canAffordBase)); // hospital heal
+                btnHospHealAll.disabled = ((nDamage === 0) || (!canAffordFull)); // hospital heal all
+                
+                // Add visual disabled styling for hospital buttons
+                if (btnHospHeal5.disabled) {
+                        btnHospHeal5.style.opacity = "0.5";
+                        btnHospHeal5.style.cursor = "not-allowed";
+                } else {
+                        btnHospHeal5.style.opacity = "1";
+                        btnHospHeal5.style.cursor = "pointer";
+                }
+                
+                if (btnHospHealAll.disabled) {
+                        btnHospHealAll.style.opacity = "0.5";
+                        btnHospHealAll.style.cursor = "not-allowed";
+                } else {
+                        btnHospHealAll.style.opacity = "1";
+                        btnHospHealAll.style.cursor = "pointer";
+                }
         }
 
         function close() {
@@ -16215,11 +16238,7 @@ function do_purchase(pItem, callback) {
                         initFunc();
                 });
         }
-        function hosp_one() {
-                if (g_pChar.m_nCredits < l_nBaseHospCost) {
-                        Popup.alert("You don't have enough credits for this treatment.\nCost: " + l_nBaseHospCost + " credits\nAvailable: " + g_pChar.m_nCredits + " credits");
-                        return;
-                }
+function hosp_one() {
                 g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
                         g_pChar.m_nHealthPhysical++;
                         g_pChar.m_nCredits -= l_nBaseHospCost;
@@ -16227,10 +16246,6 @@ function do_purchase(pItem, callback) {
                 });
         }
         function hosp_all() {
-                if (g_pChar.m_nCredits < l_nFullHospCost) {
-                        Popup.alert("You don't have enough credits for this treatment.\nCost: " + l_nFullHospCost + " credits\nAvailable: " + g_pChar.m_nCredits + " credits");
-                        return;
-                }
                 g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
                         g_pChar.m_nCredits -= l_nFullHospCost;
