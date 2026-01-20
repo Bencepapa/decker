@@ -17459,111 +17459,110 @@ function hosp_one() {
 }
 
 // main.js
-
-        Popup.modern_matrix = function(pEntryNode) {
-                let [obj, txtTitle, txtSteps, mapContainer, programContainer, btnJackOut] = HTMLbuilder(
-                        ["div", true, { id: "popup_modern_matrix" }, [
-                                ["div", { className: "modern-titlebar" }, [
-                                        ["div", true, { className: "modern-matrix-title" }],
-                                        ["div", true, { className: "modern-matrix-status-top" }],
-                                        ["button", true, { textContent: "Jack Out", className: "modern-exit-btn" }],
-                                ]],
-                                ["div", { className: "modern-matrix-content" }, [
-                                        ["div", true, { id: "modern-map-section" }],
-                                        ["div", true, { id: "modern-programs-section" }],
-                                ]],
+{
+        let [obj, txtTitle, txtSteps, btnJackOut, mapContainer, programContainer] = HTMLbuilder(
+                ["div", true, { id: "popup_modern_matrix" }, [  // obj
+                        ["div", { className: "modern-titlebar" }, [
+                                ["div", true, { className: "modern-matrix-title" }], //txtTitle
+                                ["div", true, { className: "modern-matrix-status-top" }], //txtSteps
+                                ["button", true, { textContent: "Jack Out", className: "modern-exit-btn" }], //btnJackOut
                         ]],
-                );
+                        ["div", { className: "modern-matrix-content" }, [
+                                ["div", true, { id: "modern-map-section" }], //mapContainer
+                                ["div", true, { id: "modern-programs-section" }], //programContainer
+                        ]],
+                ]],
+        );
 
-                function update() {
-                        if (!g_pChar || !g_pChar.m_pSystem) return;
-                        let sys = g_pChar.m_pSystem;
-                        let alertColor = "#0f0";
-                        let alertString = "NORMAL";
-                        if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
-                        if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
+        Popup.onclick(btnJackOut, OnDisconnect)
 
-                        txtSteps.innerHTML = `
-                                <span style="color: ${alertColor}">ALERT: ${alertString}</span> | 
-                                <span>CPU: ${sys.m_pSystemCPU ? sys.m_pSystemCPU.m_szName : '---'}</span> | 
-                                <span>DECK: ${g_pChar.m_szDeckName}</span>
-                        `;
-                        txtTitle.textContent = sys.m_nCorporation !== null ? g_szCorpNames[sys.m_nCorporation] : "Unknown System";
-                }
+        Popup.create("modern_matrix", obj).onInit(initFunc).onKey({"Escape":close});
+        
+        function update() {
+                if (!g_pChar || !g_pChar.m_pSystem) return;
+                let sys = g_pChar.m_pSystem;
+                let alertColor = "#0f0";
+                let alertString = "NORMAL";
+                if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
+                if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
 
-                function refreshPrograms() {
-                        programContainer.innerHTML = "";
-                        if (!g_pChar) return;
-
-                        g_pChar.m_olSoftware.forEach((prog, idx) => {
-                                if (prog.m_nLoadedRating <= 0) return;
-
-                                let card = document.createElement("div");
-                                card.className = "modern-matrix-program-card";
-                                if (g_pChar.m_pActiveAttack === prog || g_pChar.m_pActiveArmor === prog) {
-                                        card.classList.add("active");
-                                }
-
-                                let iconIdx = prog.m_nImage;
-                                let x = (iconIdx % 16) * 24;
-                                let y = Math.floor(iconIdx / 16) * 24;
-
-                                card.innerHTML = `
-                                        <div class="mini-prog-icon" style="background-position: -${x}px -${y}px"></div>
-                                        <div class="mini-prog-info">
-                                                <div class="mini-prog-name">${prog.m_szName}</div>
-                                                <div class="mini-prog-rating">${prog.m_nLoadedRating}</div>
-                                        </div>
-                                `;
-
-                                card.onclick = () => {
-                                        if (typeof OnRunProgram === 'function') {
-                                                // Set the program as selected in the matrix view list if possible
-                                                // This is a bridge between modern UI and traditional logic
-                                                g_pChar.m_pTargettedIce = null;
-                                                // Implementation depends on how MatrixView handles selection
-                                        }
-                                };
-                                programContainer.appendChild(card);
-                        });
-                }
-
-                function initFunc(pEntryNode) {
-                        update();
-                        refreshPrograms();
-
-                        // Initialize Map
-                        if (typeof MatrixView !== 'undefined') {
-                                let mv = new MatrixView(mapContainer);
-                                if (pEntryNode !== undefined && pEntryNode !== null) {
-                                        DoEnterNode(pEntryNode, DIR_CENTER);
-                                }
-                                // The original MatrixView logic expects to be called from a different context
-                                // We need to ensure it draws.
-                                if (mv.Draw) mv.Draw();
-                                if (mv.RedrawWindow) mv.RedrawWindow();
-                        }
-                        
-                        // Set up auto-refresh
-                        let interval = setInterval(() => {
-                                if (!document.getElementById("popup_modern_matrix")) {
-                                        clearInterval(interval);
-                                        return;
-                                }
-                                update();
-                                refreshPrograms();
-                        }, 1000);
-                }
-
-                Popup.onclick(btnJackOut, jackOut);
-                Popup.create("modern_matrix", obj).onInit(initFunc);
-
-                function jackOut() {
-                        Popup.close();
-                        OnDisconnect();
-                }
+                txtSteps.innerHTML = `
+                        <span style="color: ${alertColor}">ALERT: ${alertString}</span> | 
+                        <span>CPU: ${sys.m_pSystemCPU ? sys.m_pSystemCPU.m_szName : '---'}</span> | 
+                        <span>DECK: ${g_pChar.m_szDeckName}</span>
+                `;
+                txtTitle.textContent = sys.m_nCorporation !== null ? g_szCorpNames[sys.m_nCorporation] : "Unknown System";
         }
 
+        function refreshPrograms() {
+                programContainer.innerHTML = "";
+                if (!g_pChar) return;
+
+                g_pChar.m_olSoftware.forEach((prog, idx) => {
+                        if (prog.m_nLoadedRating <= 0) return;
+
+                        let card = document.createElement("div");
+                        card.className = "modern-matrix-program-card";
+                        if (g_pChar.m_pActiveAttack === prog || g_pChar.m_pActiveArmor === prog) {
+                                card.classList.add("active");
+                        }
+
+                        let iconIdx = prog.m_nImage;
+                        let x = (iconIdx % 16) * 24;
+                        let y = Math.floor(iconIdx / 16) * 24;
+
+                        card.innerHTML = `
+                                <div class="mini-prog-icon" style="background-position: -${x}px -${y}px"></div>
+                                <div class="mini-prog-info">
+                                        <div class="mini-prog-name">${prog.m_szName}</div>
+                                        <div class="mini-prog-rating">${prog.m_nLoadedRating}</div>
+                                </div>
+                        `;
+
+                        card.onclick = () => {
+                                if (typeof OnRunProgram === 'function') {
+                                        // Set the program as selected in the matrix view list if possible
+                                        // This is a bridge between modern UI and traditional logic
+                                        g_pChar.m_pTargettedIce = null;
+                                        // Implementation depends on how MatrixView handles selection
+                                }
+                        };
+                        programContainer.appendChild(card);
+                });
+        }
+
+        function initFunc(pEntryNode) {
+                update();
+                refreshPrograms();
+
+                // Initialize Map
+                if (typeof MatrixView !== 'undefined') {
+                        let mv = new MatrixView(mapContainer);
+                        if (pEntryNode !== undefined && pEntryNode !== null) {
+                                DoEnterNode(pEntryNode, DIR_CENTER);
+                        }
+                        // The original MatrixView logic expects to be called from a different context
+                        // We need to ensure it draws.
+                        if (mv.Draw) mv.Draw();
+                        if (mv.RedrawWindow) mv.RedrawWindow();
+                }
+                
+                // Set up auto-refresh
+                let interval = setInterval(() => {
+                        if (!document.getElementById("popup_modern_matrix")) {
+                                clearInterval(interval);
+                                return;
+                        }
+                        update();
+                        refreshPrograms();
+                }, 1000);
+        }
+
+        function jackOut() {
+                Popup.close();
+                OnDisconnect();
+        }
+}
 // main.js
 
 var g_pChar = null;
