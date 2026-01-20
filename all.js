@@ -16220,6 +16220,23 @@ function do_purchase(pItem, callback) {
                         btnHospHealAll.style.opacity = "1";
                         btnHospHealAll.style.cursor = "pointer";
                 }
+                
+                // Add visual disabled styling for home buttons when no healing needed
+                if (btnHomeHeal5.disabled) {
+                        btnHomeHeal5.style.opacity = "0.5";
+                        btnHomeHeal5.style.cursor = "not-allowed";
+                } else {
+                        btnHomeHeal5.style.opacity = "1";
+                        btnHomeHeal5.style.cursor = "pointer";
+                }
+                
+                if (btnHomeHealAll.disabled) {
+                        btnHomeHealAll.style.opacity = "0.5";
+                        btnHomeHealAll.style.cursor = "not-allowed";
+                } else {
+                        btnHomeHealAll.style.opacity = "1";
+                        btnHomeHealAll.style.cursor = "pointer";
+                }
         }
 
         function close() {
