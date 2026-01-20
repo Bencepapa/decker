@@ -16154,7 +16154,7 @@ function do_purchase(pItem, callback) {
         // Set up event handlers
         Popup.onclick(btnHomeHeal5, home_one);
         Popup.onclick(btnHomeHealAll, home_all);
-        Popup.onclick(btnHospHeal5, home_one); //hosp_one);
+        Popup.onclick(btnHospHeal5, hosp_one);
         Popup.onclick(btnHospHealAll, hosp_all);
         Popup.onclick(btnWaitDay, wait_day);
         Popup.onclick(btnWaitWeek, wait_week);
