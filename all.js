@@ -2385,8 +2385,12 @@ function createWarningItem(warning) {
         warningItem.addEventListener('click', () => {
                 // Open target popup based on warning type (same as home screen buttons)
                 switch(warning.target) {
-                        case 'rest':
-                                Popup.rest();
+case 'rest':
+                                if (Config.m_bModernUI) {
+                                        Popup.modern_rest();
+                                } else {
+                                        Popup.rest();
+                                }
                                 break;
                         case 'character':
                                 if (Config.m_bModernUI) {
@@ -12791,8 +12795,12 @@ Popup.create("homeview", obj).onInit(() => {
         function view_project() {
                 Popup.projects();
         }
-        function view_rest() {
-                Popup.rest();
+function view_rest() {
+                if (Config.m_bModernUI) {
+                        Popup.modern_rest();
+                } else {
+                        Popup.rest();
+                }
         }
         function view_options() {
                 Popup.options();
@@ -16024,6 +16032,193 @@ function do_purchase(pItem, callback) {
         }
         function hosp_all() {
         g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
+                        g_pChar.m_nHealthPhysical = MAX_HEALTH;
+                        g_pChar.m_nCredits -= l_nFullHospCost;
+                        initFunc();
+                });
+        }
+        function wait_day() {
+                g_pChar.PassTime(1, () => {
+                        initFunc();
+                });
+        }
+        function wait_week() {
+                let nTime = (7 - g_pChar.m_nDayOfWeek);
+                g_pChar.PassTime(nTime, () => {
+                        initFunc();
+                });
+        }
+
+}
+
+// popup_modern_rest.js
+
+{
+        let [obj, h2, dateDisplay, healthDisplay, creditsDisplay, 
+             homeTime5, homeTimeAll, hospitalTime5, hospitalTimeAll,
+             hospitalCost5, hospitalCostAll, btnHomeHeal5, btnHomeHealAll, 
+             btnHospHeal5, btnHospHealAll, btnWaitDay, btnWaitWeek, btnClose] = HTMLbuilder(
+                ["div", true, {className:"modern-ui"}, [
+                        ["h2", true],  // "Rest & Recuperate"
+                        
+                        // Character Stats Section
+                        ["div", {className:"character-stats-grid", style:{display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"16px", marginBottom:"20px"}}, [
+                                ["div", {className:"card-stat-big", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"8px", padding:"16px", textAlign:"center"}}, [
+                                        ["div", true, {className:"stat-big-value", style:{fontSize:"1.4em", fontWeight:"bold", color:"#0ff", marginBottom:"4px"}}], // dateDisplay
+                                        ["div", {className:"stat-big-label", textContent:"Date", style:{color:"#888", fontSize:"0.9em"}}],
+                                ]],
+                                ["div", {className:"card-stat-big", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"8px", padding:"16px", textAlign:"center"}}, [
+                                        ["div", true, {className:"stat-big-value", style:{fontSize:"1.4em", fontWeight:"bold", color:"#0f0", marginBottom:"4px"}}], // healthDisplay  
+                                        ["div", {className:"stat-big-label", textContent:"Health", style:{color:"#888", fontSize:"0.9em"}}],
+                                ]],
+                                ["div", {className:"card-stat-big", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"8px", padding:"16px", textAlign:"center"}}, [
+                                        ["div", true, {className:"stat-big-value", style:{fontSize:"1.4em", fontWeight:"bold", color:"#ff0", marginBottom:"4px"}}], // creditsDisplay
+                                        ["div", {className:"stat-big-label", textContent:"Credits", style:{color:"#888", fontSize:"0.9em"}}],
+                                ]],
+                        ]],
+                        
+                        // Healing Options Section
+                        ["div", {className:"healing-options-grid", style:{display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:"20px", marginBottom:"20px"}}, [
+                                // Home Healing Card
+                                ["div", {className:"card-healing-option", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"12px", padding:"20px"}}, [
+                                        ["div", {className:"healing-header", style:{marginBottom:"16px", textAlign:"center"}}, [
+                                                ["div", {className:"healing-title", textContent:"Home Healing", style:{fontSize:"1.3em", fontWeight:"bold", color:"#0f0", marginBottom:"4px"}}],
+                                                ["div", {className:"healing-subtitle", textContent:"Free & Natural", style:{color:"#888", fontSize:"0.9em"}}],
+                                        ]],
+                                        ["div", {className:"healing-options", style:{display:"flex", flexDirection:"column", gap:"12px"}}, [
+                                                ["div", {className:"healing-option", style:{border:"1px solid #333", borderRadius:"8px", padding:"12px"}}, [
+                                                        ["div", {textContent:"Heal 5%", style:{fontWeight:"bold", marginBottom:"4px"}}],
+                                                        ["div", true, {className:"healing-time", style:{color:"#0ff", fontSize:"0.9em", marginBottom:"8px"}}], // homeTime5
+                                                        ["button", true, {className:"healing-btn", textContent:"Heal 5%", style:{background:"linear-gradient(135deg, #0f0, #080)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold", width:"100%"}}], // btnHomeHeal5
+                                                ]],
+                                                ["div", {className:"healing-option", style:{border:"1px solid #333", borderRadius:"8px", padding:"12px"}}, [
+                                                        ["div", {textContent:"Heal 100%", style:{fontWeight:"bold", marginBottom:"4px"}}],
+                                                        ["div", true, {className:"healing-time", style:{color:"#0ff", fontSize:"0.9em", marginBottom:"8px"}}], // homeTimeAll
+                                                        ["button", true, {className:"healing-btn", textContent:"Heal All", style:{background:"linear-gradient(135deg, #0f0, #080)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold", width:"100%"}}], // btnHomeHealAll
+                                                ]],
+                                        ]],
+                                ]],
+                                
+                                // Hospital Healing Card  
+                                ["div", {className:"card-healing-option", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"12px", padding:"20px"}}, [
+                                        ["div", {className:"healing-header", style:{marginBottom:"16px", textAlign:"center"}}, [
+                                                ["div", {className:"healing-title", textContent:"Hospital", style:{fontSize:"1.3em", fontWeight:"bold", color:"#00f", marginBottom:"4px"}}],
+                                                ["div", {className:"healing-subtitle", textContent:"Professional & Fast", style:{color:"#888", fontSize:"0.9em"}}],
+                                        ]],
+                                        ["div", {className:"healing-options", style:{display:"flex", flexDirection:"column", gap:"12px"}}, [
+                                                ["div", {className:"healing-option", style:{border:"1px solid #333", borderRadius:"8px", padding:"12px"}}, [
+                                                        ["div", {textContent:"Heal 5%", style:{fontWeight:"bold", marginBottom:"4px"}}],
+                                                        ["div", true, {className:"healing-time", style:{color:"#0ff", fontSize:"0.9em", marginBottom:"4px"}}], // hospitalTime5
+                                                        ["div", true, {className:"healing-cost", style:{color:"#ff0", fontSize:"0.9em", marginBottom:"8px"}}], // hospitalCost5
+                                                        ["button", true, {className:"healing-btn", textContent:"Heal 5%", style:{background:"linear-gradient(135deg, #00f, #008)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold", width:"100%"}}], // btnHospHeal5
+                                                ]],
+                                                ["div", {className:"healing-option", style:{border:"1px solid #333", borderRadius:"8px", padding:"12px"}}, [
+                                                        ["div", {textContent:"Heal 100%", style:{fontWeight:"bold", marginBottom:"4px"}}],
+                                                        ["div", true, {className:"healing-time", style:{color:"#0ff", fontSize:"0.9em", marginBottom:"4px"}}], // hospitalTimeAll
+                                                        ["div", true, {className:"healing-cost", style:{color:"#ff0", fontSize:"0.9em", marginBottom:"8px"}}], // hospitalCostAll
+                                                        ["button", true, {className:"healing-btn", textContent:"Heal All", style:{background:"linear-gradient(135deg, #00f, #008)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold", width:"100%"}}], // btnHospHealAll
+                                                ]],
+                                        ]],
+                                ]],
+                        ]],
+                        
+                        // Time Management Section
+                        ["div", {className:"time-management-section", style:{background:"linear-gradient(135deg, #2a2a2a, #1a1a1a)", border:"1px solid #444", borderRadius:"12px", padding:"20px", marginBottom:"20px"}}, [
+                                ["div", {className:"time-header", style:{marginBottom:"16px", textAlign:"center"}}, [
+                                        ["div", {textContent:"Time Management", style:{fontSize:"1.3em", fontWeight:"bold", color:"#f0f", marginBottom:"4px"}}],
+                                        ["div", {textContent:"Rest Without Healing", style:{color:"#888", fontSize:"0.9em"}}],
+                                ]],
+                                ["div", {className:"time-options", style:{display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:"16px"}}, [
+                                        ["div", {className:"time-option", style:{textAlign:"center"}}, [
+                                                ["div", {textContent:"Wait 1 Day", style:{marginBottom:"8px", fontWeight:"bold"}}],
+                                                ["button", true, {className:"time-btn", textContent:"Wait Day", style:{background:"linear-gradient(135deg, #f0f, #808)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold"}}], // btnWaitDay
+                                        ]],
+                                        ["div", {className:"time-option", style:{textAlign:"center"}}, [
+                                                ["div", {textContent:"Wait Until Week End", style:{marginBottom:"8px", fontWeight:"bold"}}],
+                                                ["button", true, {className:"time-btn", textContent:"Wait Week", style:{background:"linear-gradient(135deg, #f0f, #808)", border:"none", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"8px 16px", fontWeight:"bold"}}], // btnWaitWeek
+                                        ]],
+                                ]],
+                        ]],
+                        
+                        // Close Button
+                        ["div", {className:"btnGroup", style:{textAlign:"center"}}, [
+                                ["button", true, {textContent:"Close", style:{background:"linear-gradient(135deg, #666, #333)", border:"1px solid #888", borderRadius:"4px", color:"#fff", cursor:"pointer", padding:"10px 20px", fontWeight:"bold"}}], // btnClose
+                        ]],
+                ]]
+        );
+
+        // Set the title
+        h2.textContent = "Rest & Recuperate";
+
+        // Set up event handlers
+        Popup.onclick(btnHomeHeal5, home_one);
+        Popup.onclick(btnHomeHealAll, home_all);
+        Popup.onclick(btnHospHeal5, hosp_one);
+        Popup.onclick(btnHospHealAll, hosp_all);
+        Popup.onclick(btnWaitDay, wait_day);
+        Popup.onclick(btnWaitWeek, wait_week);
+        Popup.onclick(btnClose, close);
+
+        Popup.create("modern_rest", obj).onInit(initFunc).onKey({"Escape":close});
+
+        // Reuse the same variables and functions from the original popup
+        let l_nBaseTime, l_nFullTime, l_nBaseHospCost, l_nFullHospCost;
+
+        function initFunc() {
+                // Update character stats displays
+                dateDisplay.textContent = g_szMonthNames[g_pChar.m_nMonth]+" "+(g_pChar.m_nDayOfMonth+1)+", "+g_pChar.m_nYear;
+                healthDisplay.textContent = (g_pChar.m_nHealthPhysical * HEALTH_INCREMENT) + "%";
+                creditsDisplay.textContent = g_pChar.m_nCredits;
+                
+                // Calculate the healing times and costs (same as original)
+                let nDamage = MAX_HEALTH - g_pChar.m_nHealthPhysical;
+                l_nBaseTime = nDamage;
+                l_nFullTime = Math.floor((nDamage * (nDamage + 2))/3); // not exact, since it includes a "discount"
+                l_nBaseHospCost = 100 * l_nBaseTime;
+                l_nFullHospCost = 100 * l_nFullTime;
+
+                // Update healing time displays
+                homeTime5.textContent = "Time: " + l_nBaseTime + " days";
+                homeTimeAll.textContent = "Time: " + l_nFullTime + " days";
+                hospitalTime5.textContent = "Time: " + Math.ceil(l_nBaseTime/2) + " days";
+                hospitalTimeAll.textContent = "Time: " + Math.ceil(l_nFullTime/2) + " days";
+                
+                // Update cost displays
+                hospitalCost5.textContent = "Cost: " + l_nBaseHospCost + " credits";
+                hospitalCostAll.textContent = "Cost: " + l_nFullHospCost + " credits";
+
+                // Enable/disable controls
+                btnHomeHeal5.disabled = (nDamage === 0); // home heal
+                btnHomeHealAll.disabled = (nDamage === 0); // home heal all
+                btnHospHeal5.disabled = ((nDamage === 0) || (g_pChar.m_nCredits < l_nBaseHospCost)); // hospital heal
+                btnHospHealAll.disabled = ((nDamage === 0) || (g_pChar.m_nCredits < l_nFullHospCost)); // hospital heal all
+        }
+
+        function close() {
+                Popup.close();
+        }
+
+        function home_one() {
+                g_pChar.PassTime(l_nBaseTime, () => {
+                        g_pChar.m_nHealthPhysical++;
+                        initFunc();
+                });
+        }
+        function home_all() {
+                g_pChar.PassTime(l_nFullTime, () => {
+                        g_pChar.m_nHealthPhysical = MAX_HEALTH;
+                        initFunc();
+                });
+        }
+        function hosp_one() {
+                g_pChar.PassTime(Math.ceil(l_nBaseTime/2), () => {
+                        g_pChar.m_nHealthPhysical++;
+                        g_pChar.m_nCredits -= l_nBaseHospCost;
+                        initFunc();
+                });
+        }
+        function hosp_all() {
+                g_pChar.PassTime(Math.ceil(l_nFullTime/2), () => {
                         g_pChar.m_nHealthPhysical = MAX_HEALTH;
                         g_pChar.m_nCredits -= l_nFullHospCost;
                         initFunc();
