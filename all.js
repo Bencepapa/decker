@@ -17475,23 +17475,19 @@ function hosp_one() {
         );
 
         Popup.onclick(btnJackOut, OnDisconnect)
-
+        MV.l_cvClock = new ClockView(txtSteps);
         Popup.create("modern_matrix", obj).onInit(initFunc).onKey({"Escape":close});
-        
+
         function update() {
                 if (!g_pChar || !g_pChar.m_pSystem) return;
                 let sys = g_pChar.m_pSystem;
-                let alertColor = "#0f0";
-                let alertString = "NORMAL";
+                let alertColor = "#0ff";
+                let alertString = "GREEN";
                 if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
                 if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
-
-                txtSteps.innerHTML = `
-                        <span style="color: ${alertColor}">ALERT: ${alertString}</span> | 
-                        <span>CPU: ${sys.m_pSystemCPU ? sys.m_pSystemCPU.m_szName : '---'}</span> | 
-                        <span>DECK: ${g_pChar.m_szDeckName}</span>
-                `;
-                txtTitle.textContent = sys.m_nCorporation !== null ? g_szCorpNames[sys.m_nCorporation] : "Unknown System";
+                let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                let shortenedSystemName = g_pChar.m_pCurrentContract.m_szSystemName.split('', 10).reduce((o, c) => o.length === 9 ? `${o}${c}...` : `${o}${c}` , '');
+                txtTitle.innerHTML = `<span style="color: ${alertColor}"> ${shortenedSystemName}//${currentNode} ALERT: ${alertString}</span>`;
         }
 
         function refreshPrograms() {
@@ -17534,6 +17530,7 @@ function hosp_one() {
         function initFunc(pEntryNode) {
                 update();
                 refreshPrograms();
+                      MV.l_cvClock.update();
 
                 // Initialize Map
                 if (typeof MatrixView !== 'undefined') {
