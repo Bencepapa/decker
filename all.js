@@ -17531,18 +17531,29 @@ function hosp_one() {
                 update();
                 refreshPrograms();
                       MV.l_cvClock.update();
-
-                // Initialize Map
-                if (typeof MatrixView !== 'undefined') {
-                        let mv = new MatrixView(mapContainer);
+                /* copy from the original code to check
+                        // Initialize Map
+                        if (pEntryNode !== null) {
+                                // first enter
+                                DoEnterNode(pEntryNode, DIR_CENTER);
+                        } else {
+                                // loaded game
+                                MV.l_NodeView.RedrawWindow(); // Redraw the node
+                                MV.l_MapView.DoMove(); // Redraw the map
+                        }
+                */
+                //if (typeof MatrixView !== 'undefined') {
+                        console.log("Initializing MatrixView for modern UI");
+                        let mv = new MapView(mapContainer);
                         if (pEntryNode !== undefined && pEntryNode !== null) {
+                                console.log("Entering node:", pEntryNode);
                                 DoEnterNode(pEntryNode, DIR_CENTER);
                         }
                         // The original MatrixView logic expects to be called from a different context
                         // We need to ensure it draws.
                         if (mv.Draw) mv.Draw();
                         if (mv.RedrawWindow) mv.RedrawWindow();
-                }
+                //}
                 
                 // Set up auto-refresh
                 let interval = setInterval(() => {
@@ -17553,11 +17564,6 @@ function hosp_one() {
                         update();
                         refreshPrograms();
                 }, 1000);
-        }
-
-        function jackOut() {
-                Popup.close();
-                OnDisconnect();
         }
 }
 // main.js
