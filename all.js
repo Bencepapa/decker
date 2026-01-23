@@ -11429,12 +11429,56 @@ var MapView = function(obj) {
         });
 
 
-        this.obj.onclick = e => {
+this.obj.onclick = e => {
                 if (dragged) return;
                 // only interested if clicked on a node
                 if (e.target.parentNode.parentNode === this.obj)
                         this.ScrollToCurrentNode(e.target);
         };
+
+        // Touch and wheel zoom support
+        let touchStartDistance = null;
+        let touchStartScale = 1;
+
+        // Mousewheel zoom support
+        this.obj.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 1 : -1;
+                this.DoZoomWheel(delta);
+        }, { passive: false });
+
+        // Touch start - detect two-finger gesture
+        this.obj.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                        touchStartDistance = this.GetTouchDistance(e.touches[0], e.touches[1]);
+                        touchStartScale = this.m_nZoomMode;
+                        e.preventDefault();
+                }
+        }, { passive: false });
+
+        // Touch move - handle pinch zoom
+        this.obj.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && touchStartDistance !== null) {
+                        const currentDistance = this.GetTouchDistance(e.touches[0], e.touches[1]);
+                        const scaleChange = currentDistance / touchStartDistance;
+                        
+                        // Convert scale change to zoom level with threshold
+                        if (scaleChange > 1.2) {
+                                this.DoZoomWheel(1);
+                                touchStartDistance = currentDistance;
+                        } else if (scaleChange < 0.8) {
+                                this.DoZoomWheel(-1);
+                                touchStartDistance = currentDistance;
+                        }
+                        e.preventDefault();
+                }
+        }, { passive: false });
+
+        // Touch end - reset gesture tracking
+        this.obj.addEventListener('touchend', () => {
+                touchStartDistance = null;
+                touchStartScale = 1;
+        }, { passive: false });
 }
 
 // center view into the "here" cell
@@ -11463,28 +11507,10 @@ MapView.prototype.DoMove = function() {
 MapView.prototype.DoZoom = function() {
         this.m_nZoomMode = (this.m_nZoomMode + 1) % 3;
 
-        // Change the zoom mode.
-        switch (this.m_nZoomMode) {
-                case 0: // small
-                        this.m_nGridSize = 16;
-                        this.m_nSkew = 0;
-                        this.m_ilNodes = "img/mapNodes16.png";
-                        this.m_ilExits = "img/mapExits16.png";
-                        break;
-                case 1: // big
-                        this.m_nGridSize = 32;
-                        this.m_nSkew = 0;
-                        this.m_ilNodes = "img/mapNodes32.png";
-                        this.m_ilExits = "img/mapExits32.png";
-                        break;
-                case 2: // 3D
-                        this.m_nGridSize = 32;
-                        this.m_nSkew = 9;
-                        this.m_ilNodes = "img/mapNodes3D.png";
-                        this.m_ilExits = "img/mapExits3D.png";
-        }
+        // Apply zoom settings using helper method
+        this.UpdateZoomSettings();
 
-        // Resize the window
+// Resize window
         this.RedrawWindow();
 }
 
@@ -11592,8 +11618,63 @@ MapView.prototype.RedrawWindow = function() {
         this.obj.innerHTML = "";
         this.obj.appendChild(container);
 
-        this.ScrollToCurrentNode();
+this.ScrollToCurrentNode();
 }
+
+// Touch and wheel zoom helper methods
+MapView.prototype.DoZoomWheel = function(direction) {
+        // Store current map center for zoom centering
+        const centerX = this.obj.children[0].offsetLeft + this.obj.offsetWidth / 2;
+        const centerY = this.obj.children[0].offsetTop + this.obj.offsetHeight / 2;
+        
+        // Change zoom mode using existing logic
+        this.m_nZoomMode = (this.m_nZoomMode + 3 + direction) % 3;
+        
+        // Apply zoom settings (reuse existing switch)
+        this.UpdateZoomSettings();
+        
+        // Redraw window
+        this.RedrawWindow();
+        
+        // Restore center position
+        this.CenterOnPosition(centerX, centerY);
+};
+
+MapView.prototype.GetTouchDistance = function(touch1, touch2) {
+        const dx = touch1.clientX - touch2.clientX;
+        const dy = touch1.clientY - touch2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+};
+
+MapView.prototype.CenterOnPosition = function(targetX, targetY) {
+        const offsetX = this.obj.offsetWidth / 2 - targetX;
+        const offsetY = this.obj.offsetHeight / 2 - targetY;
+        this.obj.children[0].style.left = (this.obj.children[0].offsetLeft + offsetX) + "px";
+        this.obj.children[0].style.top = (this.obj.children[0].offsetTop + offsetY) + "px";
+};
+
+MapView.prototype.UpdateZoomSettings = function() {
+        // Apply zoom mode changes (extracted from original DoZoom)
+        switch (this.m_nZoomMode) {
+                case 0: // small
+                        this.m_nGridSize = 16;
+                        this.m_nSkew = 0;
+                        this.m_ilNodes = "img/mapNodes16.png";
+                        this.m_ilExits = "img/mapExits16.png";
+                        break;
+                case 1: // big
+                        this.m_nGridSize = 32;
+                        this.m_nSkew = 0;
+                        this.m_ilNodes = "img/mapNodes32.png";
+                        this.m_ilExits = "img/mapExits32.png";
+                        break;
+                case 2: // 3D
+                        this.m_nGridSize = 32;
+                        this.m_nSkew = 9;
+                        this.m_ilNodes = "img/mapNodes3D.png";
+                        this.m_ilExits = "img/mapExits3D.png";
+        }
+};
 
 // matrix_message.js
 

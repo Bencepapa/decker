@@ -491,6 +491,19 @@ button:hover:not(:disabled) {
         height: 32px;
 }
 
+/* MapView zoom interaction improvements */
+#popup_matrix div[style*="overflow"] {
+        touch-action: none; /* Prevent browser zoom/pan on touch devices */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+}
+
+#map16, #map32 {
+        transition: transform 0.2s ease-out;
+        transform-origin: center center;
+}
+
 #popup_matrix button.mvButton {
         background-image: url(img/matrixButtons.png);
 }
