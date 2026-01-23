@@ -11407,20 +11407,43 @@ var MapView = function(obj) {
                 if (!dragging) return;
                 dragging = 2;
 
-                let deltaX = e.clientX - dragX;
-                let deltaY = e.clientY - dragY;
-                dragX = e.clientX;
-                dragY = e.clientY;
+                let deltaX, deltaY;
+                if (e.touches) {
+                        // Touch event: use first touch point
+                        deltaX = e.touches[0].clientX - dragX;
+                        deltaY = e.touches[0].clientY - dragY;
+                        dragX = e.touches[0].clientX;
+                        dragY = e.touches[0].clientY;
+                } else {
+                        // Mouse event: use mouse coordinates
+                        deltaX = e.clientX - dragX;
+                        deltaY = e.clientY - dragY;
+                        dragX = e.clientX;
+                        dragY = e.clientY;
+                }
 
                 this.obj.children[0].style.left = this.obj.children[0].offsetLeft + deltaX + "px";
                 this.obj.children[0].style.top = this.obj.children[0].offsetTop + deltaY + "px";
         }
-        this.obj.onmousedown = e => {
+        
+        // Unified drag start handler for both mouse and touch
+        const handleDragStart = e => {
+                if (e.touches && e.touches.length !== 1) return; // Only allow single touch for dragging
                 dragging = 1;
                 window.addEventListener("mousemove", mapMove, true);
-                dragX = e.clientX;
-                dragY = e.clientY;
-        }
+                window.addEventListener("touchmove", mapMove, true);
+                
+                if (e.touches) {
+                        dragX = e.touches[0].clientX;
+                        dragY = e.touches[0].clientY;
+                } else {
+                        dragX = e.clientX;
+                        dragY = e.clientY;
+                }
+        };
+        
+        this.obj.onmousedown = handleDragStart;
+        this.obj.addEventListener("touchstart", handleDragStart, { passive: false });
         window.addEventListener("mouseup", () => {
                 if (!dragging) return;
                 dragged = (dragging > 1);
@@ -11428,8 +11451,9 @@ var MapView = function(obj) {
                 window.removeEventListener("mousemove", mapMove, true);
         });
 
+        // Touch drag support - unified with mouse handlers
 
-this.obj.onclick = e => {
+        this.obj.onclick = e => {
                 if (dragged) return;
                 // only interested if clicked on a node
                 if (e.target.parentNode.parentNode === this.obj)
@@ -11627,6 +11651,7 @@ this.ScrollToCurrentNode();
 MapView.prototype.DoZoomWheel = function(direction) {
         if (this.m_nZoomMode === 0 && direction < 0) return; // already at minimum zoom
         if (this.m_nZoomMode === 2 && direction > 0) return; // already at maximum zoom
+
         // Change zoom mode using existing logic
         this.m_nZoomMode = (this.m_nZoomMode + 3 + direction) % 3;
         

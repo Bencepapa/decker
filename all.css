@@ -497,11 +497,13 @@ button:hover:not(:disabled) {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         -webkit-tap-highlight-color: transparent;
+        user-select: none; /* Standard property for compatibility */
 }
 
 #map16, #map32 {
         transition: transform 0.2s ease-out;
         transform-origin: center center;
+        touch-action: none; /* Prevent default touch actions */
 }
 
 #popup_matrix button.mvButton {
