@@ -11444,7 +11444,6 @@ this.obj.onclick = e => {
         this.obj.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 if (Math.abs(e.deltaY) > 50) {
-                        console.log("e.deltaY: "+e.deltaY)
                         const delta = e.deltaY > 0 ? -1 : +1;
                         this.DoZoomWheel(delta);
                 }
@@ -11630,20 +11629,12 @@ MapView.prototype.DoZoomWheel = function(direction) {
         if (this.m_nZoomMode === 2 && direction > 0) return; // already at maximum zoom
         // Change zoom mode using existing logic
         this.m_nZoomMode = (this.m_nZoomMode + 3 + direction) % 3;
-
-
-        // Store current map center for zoom centering
-        const centerX = this.obj.children[0].offsetLeft + this.obj.offsetWidth / 2;
-        const centerY = this.obj.children[0].offsetTop + this.obj.offsetHeight / 2;        
         
         // Apply zoom settings (reuse existing switch)
         this.UpdateZoomSettings();
         
         // Redraw window
         this.RedrawWindow();
-        
-        // Restore center position
-        this.CenterOnPosition(centerX, centerY);
 };
 
 MapView.prototype.GetTouchDistance = function(touch1, touch2) {
@@ -11652,12 +11643,6 @@ MapView.prototype.GetTouchDistance = function(touch1, touch2) {
         return Math.sqrt(dx * dx + dy * dy);
 };
 
-MapView.prototype.CenterOnPosition = function(targetX, targetY) {
-        const offsetX = this.obj.offsetWidth / 2 - targetX;
-        const offsetY = this.obj.offsetHeight / 2 - targetY;
-        this.obj.children[0].style.left = (this.obj.children[0].offsetLeft + offsetX) + "px";
-        this.obj.children[0].style.top = (this.obj.children[0].offsetTop + offsetY) + "px";
-};
 
 MapView.prototype.UpdateZoomSettings = function() {
         // Apply zoom mode changes (extracted from original DoZoom)
