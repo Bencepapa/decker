@@ -11443,8 +11443,11 @@ this.obj.onclick = e => {
         // Mousewheel zoom support
         this.obj.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                const delta = e.deltaY > 0 ? 1 : -1;
-                this.DoZoomWheel(delta);
+                if (Math.abs(e.deltaY) > 50) {
+                        console.log("e.deltaY: "+e.deltaY)
+                        const delta = e.deltaY > 0 ? -1 : +1;
+                        this.DoZoomWheel(delta);
+                }
         }, { passive: false });
 
         // Touch start - detect two-finger gesture
@@ -11623,12 +11626,15 @@ this.ScrollToCurrentNode();
 
 // Touch and wheel zoom helper methods
 MapView.prototype.DoZoomWheel = function(direction) {
-        // Store current map center for zoom centering
-        const centerX = this.obj.children[0].offsetLeft + this.obj.offsetWidth / 2;
-        const centerY = this.obj.children[0].offsetTop + this.obj.offsetHeight / 2;
-        
+        if (this.m_nZoomMode === 0 && direction < 0) return; // already at minimum zoom
+        if (this.m_nZoomMode === 2 && direction > 0) return; // already at maximum zoom
         // Change zoom mode using existing logic
         this.m_nZoomMode = (this.m_nZoomMode + 3 + direction) % 3;
+
+
+        // Store current map center for zoom centering
+        const centerX = this.obj.children[0].offsetLeft + this.obj.offsetWidth / 2;
+        const centerY = this.obj.children[0].offsetTop + this.obj.offsetHeight / 2;        
         
         // Apply zoom settings (reuse existing switch)
         this.UpdateZoomSettings();
