@@ -17557,7 +17557,7 @@ function hosp_one() {
 
 // popup_modern_matrix.js
 {
-        let [obj, txtTitle, txtSteps, btnJackOut, mapContainer, programContainer] = HTMLbuilder(
+        let [obj, txtTitle, txtSteps, btnJackOut, mapContainer, programContainer, messagesContainer] = HTMLbuilder(
                 ["div", true, { id: "popup_modern_matrix" }, [  // obj
                         ["div", { className: "modern-titlebar" }, [
                                 ["div", true, { className: "modern-matrix-title" }], //txtTitle
@@ -17567,12 +17567,15 @@ function hosp_one() {
                         ["div", { className: "modern-matrix-content" }, [
                                 ["div", true, { id: "modern-map-section" }], //mapContainer
                                 ["div", true, { id: "modern-programs-section" }], //programContainer
+                                ["div", true, { id: "modern-message-section", className: "inset selectable", style:{background:"white", color:"green", fontWeight:"bold", overflowX:"auto", overflowY:"scroll"}}],
                         ]],
                 ]],
         );
 
         Popup.onclick(btnJackOut, OnDisconnect)
         MV.l_cvClock = new ClockView(txtSteps);
+        tooltip.set(messagesContainer, "Messages");
+        MV.l_MessageView = new MessageView(messagesContainer);
         Popup.create("modern_matrix", obj).onInit(initFunc).onKey({"Escape":close});
 
         function update() {
@@ -17629,6 +17632,7 @@ function hosp_one() {
                 update();
                 refreshPrograms();
                 MV.l_cvClock.update();
+                
                 /* copy from the original code to check
                         // Initialize Map
                         if (pEntryNode !== null) {
