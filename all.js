@@ -17555,7 +17555,7 @@ function hosp_one() {
 
 }
 
-// main.js
+// popup_modern_matrix.js
 {
         let [obj, txtTitle, txtSteps, btnJackOut, mapContainer, programContainer] = HTMLbuilder(
                 ["div", true, { id: "popup_modern_matrix" }, [  // obj
@@ -17582,7 +17582,7 @@ function hosp_one() {
                 let alertString = "GREEN";
                 if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
                 if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
-                let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_pParentArea.m_szName : "Unknown System";
+                let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_szName : "Unknown Node";
                 let shortenedSystemName = g_pChar.m_pCurrentContract.m_szSystemName.split('', 10).reduce((o, c) => o.length === 9 ? `${o}${c}...` : `${o}${c}` , '');
                 txtTitle.innerHTML = `<span style="color: ${alertColor}"> ${shortenedSystemName}//${currentNode} ALERT: ${alertString}</span>`;
         }
@@ -17617,6 +17617,7 @@ function hosp_one() {
                                         // Set the program as selected in the matrix view list if possible
                                         // This is a bridge between modern UI and traditional logic
                                         g_pChar.m_pTargettedIce = null;
+                                        DoRunProgram(prog);
                                         // Implementation depends on how MatrixView handles selection
                                 }
                         };
@@ -17627,7 +17628,7 @@ function hosp_one() {
         function initFunc(pEntryNode) {
                 update();
                 refreshPrograms();
-                      MV.l_cvClock.update();
+                MV.l_cvClock.update();
                 /* copy from the original code to check
                         // Initialize Map
                         if (pEntryNode !== null) {
@@ -17642,6 +17643,7 @@ function hosp_one() {
                 //if (typeof MatrixView !== 'undefined') {
                         console.log("Initializing MatrixView for modern UI");
                         let mv = new MapView(mapContainer);
+                        MV.l_MapView = mv;
                         if (pEntryNode !== undefined && pEntryNode !== null) {
                                 console.log("Entering node:", pEntryNode);
                                 DoEnterNode(pEntryNode, DIR_CENTER);
@@ -17651,16 +17653,17 @@ function hosp_one() {
                         if (mv.Draw) mv.Draw();
                         if (mv.RedrawWindow) mv.RedrawWindow();
                 //}
-                
+                Anim.run()
                 // Set up auto-refresh
-                let interval = setInterval(() => {
+/*                let interval = setInterval(() => {
                         if (!document.getElementById("popup_modern_matrix")) {
                                 clearInterval(interval);
                                 return;
                         }
                         update();
                         refreshPrograms();
-                }, 1000);
+                        //mv.RedrawWindow();
+                }, 1000);*/
         }
 }
 // main.js
