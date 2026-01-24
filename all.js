@@ -11456,8 +11456,19 @@ var MapView = function(obj) {
         this.obj.onclick = e => {
                 if (dragged) return;
                 // only interested if clicked on a node
-                if (e.target.parentNode.parentNode === this.obj)
-                        this.ScrollToCurrentNode(e.target);
+                if (e.target.parentNode.parentNode === this.obj) {
+                        const targetNode = this.GetNodeFromElement(e.target);
+                        if (targetNode && targetNode !== g_pChar.m_pCurrentNode) {
+                                // Attempt auto-movement to clicked node
+                                if (!this.AttemptAutoMoveToNode(targetNode)) {
+                                        // If auto-move fails, fall back to manual selection
+                                        this.ScrollToCurrentNode(e.target);
+                                }
+                        } else {
+                                // Current node clicked, use existing behavior
+                                this.ScrollToCurrentNode(e.target);
+                        }
+                }
         };
 
         // Touch and wheel zoom support
@@ -11506,6 +11517,81 @@ var MapView = function(obj) {
                 touchStartScale = 1;
         }, { passive: false });
 }
+
+// MapView auto-movement helper methods
+MapView.prototype.GetNodeFromElement = function(element) {
+        // Find the grid coordinates from the element's position
+        if (!element || !element.style || !element.style.left || !element.style.top) {
+                return null;
+        }
+        
+        const left = parseInt(element.style.left) / this.m_nGridSize;
+        const top = parseInt(element.style.top) / this.m_nGridSize;
+        
+        // Find the node at these grid coordinates
+        const pArea = g_pChar.m_pCurrentNode.m_pParentArea;
+        return pArea.m_olNodeList.find(pNode => 
+                pNode.m_ptLocation.x === left && pNode.m_ptLocation.y === top
+        );
+};
+
+MapView.prototype.IsNodeVisited = function(pNode) {
+        // Check if node has been visited by looking for any completed programs
+        // This is a simplified check - you may need to adjust based on actual game state
+        if (!pNode || !pNode.m_pPrograms) {
+                return false; // No programs means likely not visited/fully explored
+        }
+        
+        // Check if node has any completed programs (visited indication)
+        for (let i = 0; i < pNode.m_pPrograms.length; i++) {
+                const program = pNode.m_pPrograms[i];
+                if (program && program.m_pOwner === g_pChar) {
+                        return true; // Player has completed something here = visited
+                }
+        }
+        
+        return false;
+};
+
+MapView.prototype.AttemptAutoMoveToNode = function(targetNode) {
+        if (targetNode === g_pChar.m_pCurrentNode) {
+                return false; // Already at target
+        }
+        
+        // Get current node adjacency data
+        const currentNode = g_pChar.m_pCurrentNode;
+        const availableMoves = [];
+        
+        // Check all four directions for unvisited adjacent nodes
+        const directions = [DIR_NORTH, DIR_SOUTH, DIR_EAST, DIR_WEST];
+        directions.forEach(dir => {
+                const adjacentNode = currentNode.m_pAdjNode[dir];
+                if (adjacentNode && !this.IsNodeVisited(adjacentNode)) {
+                        const distance = Math.abs(adjacentNode.m_ptLocation.x - currentNode.m_ptLocation.x) + 
+                                     Math.abs(adjacentNode.m_ptLocation.y - currentNode.m_ptLocation.y);
+                        availableMoves.push({
+                                direction: dir,
+                                node: adjacentNode,
+                                distance: distance
+                        });
+                }
+        });
+        
+        // If no unvisited adjacent nodes, can't auto-move
+        if (availableMoves.length === 0) {
+                return false;
+        }
+        
+        // Find the closest unvisited node (simple distance)
+        availableMoves.sort((a, b) => a.distance - b.distance);
+        const closestMove = availableMoves[0];
+        
+        // Perform the movement using existing movement system
+        g_pChar.m_pCurrentNode = closestMove.node;
+        MV.l_MapView.DoMove(); // Use existing movement animation and logic
+        
+        return true; // Successfully auto-moved
+};
 
 // center view into the "here" cell
 MapView.prototype.ScrollToCurrentNode = function(target) {
@@ -11690,6 +11776,7 @@ MapView.prototype.UpdateZoomSettings = function() {
                         this.m_ilNodes = "img/mapNodes3D.png";
                         this.m_ilExits = "img/mapExits3D.png";
         }
+
 };
 
 // matrix_message.js
@@ -17658,16 +17745,7 @@ function hosp_one() {
                         if (mv.RedrawWindow) mv.RedrawWindow();
                 //}
                 Anim.run()
-                // Set up auto-refresh
-/*                let interval = setInterval(() => {
-                        if (!document.getElementById("popup_modern_matrix")) {
-                                clearInterval(interval);
-                                return;
-                        }
-                        update();
-                        refreshPrograms();
-                        //mv.RedrawWindow();
-                }, 1000);*/
+
         }
 }
 // main.js
