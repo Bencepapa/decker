@@ -17673,7 +17673,7 @@ function hosp_one() {
                 if (sys.m_nAlert === ALERT_YELLOW) { alertColor = "#ff0"; alertString = "YELLOW"; }
                 if (sys.m_nAlert === ALERT_RED) { alertColor = "#f00"; alertString = "RED"; }
                 let currentNode = g_pChar.m_pCurrentNode ? g_pChar.m_pCurrentNode.m_szName : "Unknown Node";
-                let shortenedSystemName = g_pChar.m_pCurrentContract.m_szSystemName.split('', 10).reduce((o, c) => o.length === 9 ? `${o}${c}...` : `${o}${c}` , '');
+                let shortenedSystemName = g_pChar.m_pCurrentContract.m_szSystemName.split('', 16).reduce((o, c) => o.length === 15 ? `${o}${c}...` : `${o}${c}` , '');
                 txtTitle.innerHTML = `<span style="color: ${alertColor}"> ${shortenedSystemName}//${currentNode} ALERT: ${alertString}</span>`;
         }
 

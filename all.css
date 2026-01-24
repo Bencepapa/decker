@@ -558,7 +558,6 @@ button:hover:not(:disabled) {
     padding: 10px 20px;
     background: rgba(0, 255, 0, 0.1);
     border-bottom: 1px solid #0f0;
-    height: 60px;
     flex-shrink: 0;
 }
 
@@ -566,7 +565,6 @@ button:hover:not(:disabled) {
     font-size: 1.0em;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 2px;
 }
 
 .modern-matrix-status-top {
